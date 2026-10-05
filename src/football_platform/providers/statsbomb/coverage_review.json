@@ -1,0 +1,647 @@
+{
+  "source": "docs/data/STATSBOMB_COVERAGE.md",
+  "reviewed": "2026-10-04",
+  "open_data_commit": "4b73468fc5b0f1950f9f66fada70ad3a4f9327cb",
+  "seasons": [
+    {
+      "competition_id": 37,
+      "season_id": 4,
+      "competition": "FA Women's Super League",
+      "season": "2018/2019",
+      "coverage_scope": "complete",
+      "coverage_note": "107 of 110 matches present"
+    },
+    {
+      "competition_id": 37,
+      "season_id": 42,
+      "competition": "FA Women's Super League",
+      "season": "2019/2020",
+      "coverage_scope": "complete",
+      "coverage_note": "Season curtailed (COVID-19); complete as played, unbalanced"
+    },
+    {
+      "competition_id": 37,
+      "season_id": 90,
+      "competition": "FA Women's Super League",
+      "season": "2020/2021",
+      "coverage_scope": "complete",
+      "coverage_note": "131 of 132 matches present"
+    },
+    {
+      "competition_id": 37,
+      "season_id": 281,
+      "competition": "FA Women's Super League",
+      "season": "2023/2024",
+      "coverage_scope": "complete",
+      "coverage_note": null
+    },
+    {
+      "competition_id": 135,
+      "season_id": 281,
+      "competition": "Frauen Bundesliga",
+      "season": "2023/2024",
+      "coverage_scope": "complete",
+      "coverage_note": null
+    },
+    {
+      "competition_id": 182,
+      "season_id": 281,
+      "competition": "Liga F",
+      "season": "2023/2024",
+      "coverage_scope": "complete",
+      "coverage_note": null
+    },
+    {
+      "competition_id": 49,
+      "season_id": 3,
+      "competition": "NWSL",
+      "season": "2018",
+      "coverage_scope": "partial",
+      "coverage_note": "36 selected match(es)"
+    },
+    {
+      "competition_id": 49,
+      "season_id": 107,
+      "competition": "NWSL",
+      "season": "2023",
+      "coverage_scope": "complete",
+      "coverage_note": "Regular season (22 per team) plus playoffs"
+    },
+    {
+      "competition_id": 131,
+      "season_id": 281,
+      "competition": "Serie A Women",
+      "season": "2023/2024",
+      "coverage_scope": "complete",
+      "coverage_note": null
+    },
+    {
+      "competition_id": 53,
+      "season_id": 106,
+      "competition": "UEFA Women's Euro",
+      "season": "2022",
+      "coverage_scope": "complete",
+      "coverage_note": "International tournament: 3-7 matches per team"
+    },
+    {
+      "competition_id": 53,
+      "season_id": 315,
+      "competition": "UEFA Women's Euro",
+      "season": "2025",
+      "coverage_scope": "complete",
+      "coverage_note": "International tournament: 3-7 matches per team"
+    },
+    {
+      "competition_id": 72,
+      "season_id": 30,
+      "competition": "Women's World Cup",
+      "season": "2019",
+      "coverage_scope": "complete",
+      "coverage_note": "International tournament: 3-7 matches per team"
+    },
+    {
+      "competition_id": 72,
+      "season_id": 107,
+      "competition": "Women's World Cup",
+      "season": "2023",
+      "coverage_scope": "complete",
+      "coverage_note": "International tournament: 3-7 matches per team"
+    },
+    {
+      "competition_id": 9,
+      "season_id": 27,
+      "competition": "1. Bundesliga",
+      "season": "2015/2016",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Bayer Leverkusen only"
+    },
+    {
+      "competition_id": 9,
+      "season_id": 281,
+      "competition": "1. Bundesliga",
+      "season": "2023/2024",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Bayer Leverkusen only"
+    },
+    {
+      "competition_id": 1267,
+      "season_id": 107,
+      "competition": "African Cup of Nations",
+      "season": "2023",
+      "coverage_scope": "complete",
+      "coverage_note": "International tournament: 3-7 matches per team"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 276,
+      "competition": "Champions League",
+      "season": "1970/1971",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 71,
+      "competition": "Champions League",
+      "season": "1971/1972",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 277,
+      "competition": "Champions League",
+      "season": "1972/1973",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 76,
+      "competition": "Champions League",
+      "season": "1999/2000",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 44,
+      "competition": "Champions League",
+      "season": "2003/2004",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 37,
+      "competition": "Champions League",
+      "season": "2004/2005",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 39,
+      "competition": "Champions League",
+      "season": "2006/2007",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 41,
+      "competition": "Champions League",
+      "season": "2008/2009",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 21,
+      "competition": "Champions League",
+      "season": "2009/2010",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 22,
+      "competition": "Champions League",
+      "season": "2010/2011",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 23,
+      "competition": "Champions League",
+      "season": "2011/2012",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 24,
+      "competition": "Champions League",
+      "season": "2012/2013",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 25,
+      "competition": "Champions League",
+      "season": "2013/2014",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 26,
+      "competition": "Champions League",
+      "season": "2014/2015",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 27,
+      "competition": "Champions League",
+      "season": "2015/2016",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 2,
+      "competition": "Champions League",
+      "season": "2016/2017",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 1,
+      "competition": "Champions League",
+      "season": "2017/2018",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 16,
+      "season_id": 4,
+      "competition": "Champions League",
+      "season": "2018/2019",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 223,
+      "season_id": 282,
+      "competition": "Copa America",
+      "season": "2024",
+      "coverage_scope": "complete",
+      "coverage_note": "International tournament: 3-7 matches per team"
+    },
+    {
+      "competition_id": 87,
+      "season_id": 279,
+      "competition": "Copa del Rey",
+      "season": "1977/1978",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 87,
+      "season_id": 268,
+      "competition": "Copa del Rey",
+      "season": "1982/1983",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 87,
+      "season_id": 84,
+      "competition": "Copa del Rey",
+      "season": "1983/1984",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 1470,
+      "season_id": 274,
+      "competition": "FIFA U20 World Cup",
+      "season": "1979",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 43,
+      "season_id": 269,
+      "competition": "FIFA World Cup",
+      "season": "1958",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Brazil only"
+    },
+    {
+      "competition_id": 43,
+      "season_id": 270,
+      "competition": "FIFA World Cup",
+      "season": "1962",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 43,
+      "season_id": 272,
+      "competition": "FIFA World Cup",
+      "season": "1970",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Brazil only"
+    },
+    {
+      "competition_id": 43,
+      "season_id": 51,
+      "competition": "FIFA World Cup",
+      "season": "1974",
+      "coverage_scope": "partial",
+      "coverage_note": "6 selected match(es)"
+    },
+    {
+      "competition_id": 43,
+      "season_id": 54,
+      "competition": "FIFA World Cup",
+      "season": "1986",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Argentina only"
+    },
+    {
+      "competition_id": 43,
+      "season_id": 55,
+      "competition": "FIFA World Cup",
+      "season": "1990",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 43,
+      "season_id": 3,
+      "competition": "FIFA World Cup",
+      "season": "2018",
+      "coverage_scope": "complete",
+      "coverage_note": "International tournament: 3-7 matches per team"
+    },
+    {
+      "competition_id": 43,
+      "season_id": 106,
+      "competition": "FIFA World Cup",
+      "season": "2022",
+      "coverage_scope": "complete",
+      "coverage_note": "International tournament: 3-7 matches per team"
+    },
+    {
+      "competition_id": 1238,
+      "season_id": 108,
+      "competition": "Indian Super league",
+      "season": "2021/2022",
+      "coverage_scope": "complete",
+      "coverage_note": "League plus playoffs"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 278,
+      "competition": "La Liga",
+      "season": "1973/1974",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 37,
+      "competition": "La Liga",
+      "season": "2004/2005",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 38,
+      "competition": "La Liga",
+      "season": "2005/2006",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 39,
+      "competition": "La Liga",
+      "season": "2006/2007",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 40,
+      "competition": "La Liga",
+      "season": "2007/2008",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 41,
+      "competition": "La Liga",
+      "season": "2008/2009",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 21,
+      "competition": "La Liga",
+      "season": "2009/2010",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 22,
+      "competition": "La Liga",
+      "season": "2010/2011",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 23,
+      "competition": "La Liga",
+      "season": "2011/2012",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 24,
+      "competition": "La Liga",
+      "season": "2012/2013",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 25,
+      "competition": "La Liga",
+      "season": "2013/2014",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 26,
+      "competition": "La Liga",
+      "season": "2014/2015",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 27,
+      "competition": "La Liga",
+      "season": "2015/2016",
+      "coverage_scope": "complete",
+      "coverage_note": null
+    },
+    {
+      "competition_id": 11,
+      "season_id": 2,
+      "competition": "La Liga",
+      "season": "2016/2017",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 1,
+      "competition": "La Liga",
+      "season": "2017/2018",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 4,
+      "competition": "La Liga",
+      "season": "2018/2019",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 42,
+      "competition": "La Liga",
+      "season": "2019/2020",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 11,
+      "season_id": 90,
+      "competition": "La Liga",
+      "season": "2020/2021",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Barcelona only"
+    },
+    {
+      "competition_id": 81,
+      "season_id": 275,
+      "competition": "Liga Profesional",
+      "season": "1981",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 81,
+      "season_id": 48,
+      "competition": "Liga Profesional",
+      "season": "1997/1998",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 7,
+      "season_id": 27,
+      "competition": "Ligue 1",
+      "season": "2015/2016",
+      "coverage_scope": "complete",
+      "coverage_note": "377 of 380 matches present"
+    },
+    {
+      "competition_id": 7,
+      "season_id": 108,
+      "competition": "Ligue 1",
+      "season": "2021/2022",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Paris Saint-Germain only"
+    },
+    {
+      "competition_id": 7,
+      "season_id": 235,
+      "competition": "Ligue 1",
+      "season": "2022/2023",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Paris Saint-Germain only"
+    },
+    {
+      "competition_id": 44,
+      "season_id": 107,
+      "competition": "Major League Soccer",
+      "season": "2023",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Inter Miami only"
+    },
+    {
+      "competition_id": 116,
+      "season_id": 68,
+      "competition": "North American League",
+      "season": "1977",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 2,
+      "season_id": 44,
+      "competition": "Premier League",
+      "season": "2003/2004",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Arsenal only"
+    },
+    {
+      "competition_id": 2,
+      "season_id": 27,
+      "competition": "Premier League",
+      "season": "2015/2016",
+      "coverage_scope": "complete",
+      "coverage_note": null
+    },
+    {
+      "competition_id": 12,
+      "season_id": 86,
+      "competition": "Serie A",
+      "season": "1986/1987",
+      "coverage_scope": "partial",
+      "coverage_note": "1 selected match(es)"
+    },
+    {
+      "competition_id": 12,
+      "season_id": 27,
+      "competition": "Serie A",
+      "season": "2015/2016",
+      "coverage_scope": "complete",
+      "coverage_note": null
+    },
+    {
+      "competition_id": 55,
+      "season_id": 43,
+      "competition": "UEFA Euro",
+      "season": "2020",
+      "coverage_scope": "complete",
+      "coverage_note": "International tournament: 3-7 matches per team"
+    },
+    {
+      "competition_id": 55,
+      "season_id": 282,
+      "competition": "UEFA Euro",
+      "season": "2024",
+      "coverage_scope": "complete",
+      "coverage_note": "International tournament: 3-7 matches per team"
+    },
+    {
+      "competition_id": 35,
+      "season_id": 75,
+      "competition": "UEFA Europa League",
+      "season": "1988/1989",
+      "coverage_scope": "partial",
+      "coverage_note": "Matches involving Napoli only"
+    }
+  ]
+}
