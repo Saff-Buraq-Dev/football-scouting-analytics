@@ -19,10 +19,10 @@ The image contains code only. Football data is downloaded directly from StatsBom
 
 ## Steps
 
-1. **Make the image pullable.** GitHub publishes it on every push to `main` (CI job "Publish Docker image").
-   New GHCR packages are private: either set the package to *Public* (GitHub → your profile → Packages →
-   `football-scouting-analytics` → Package settings → Change visibility), or add `ghcr.io` as a registry in Portainer
-   with a GitHub token that has `read:packages`.
+1. **Image.** GitHub publishes `ghcr.io/saff-buraq-dev/football-scouting-analytics` on every push to `main`
+   (CI job "Publish Docker image"). It is public (linked to this public repository), so Portainer needs no
+   credentials. If the package is ever made private, add `ghcr.io` as a registry in Portainer with a GitHub token
+   that has `read:packages`.
 2. In Portainer: **Stacks → Add stack**. Name it `football-scouting`, choose *Web editor* and paste
    [`portainer-stack.yml`](portainer-stack.yml), or choose *Repository* and point to this repository with compose path
    `deploy/portainer-stack.yml`.
