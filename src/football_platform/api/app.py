@@ -15,8 +15,10 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from football_platform.analytics.definitions import ALL_METRICS, PositionGroup
+from football_platform.analytics.scouting import DEFAULT_NEAR_MISS_POINTS
 from football_platform.api import repository
 from football_platform.api.comparison import MAX_PLAYERS, MIN_PLAYERS, build_comparison
+from football_platform.api.scouting import InvalidCriteriaError, build_scouting_result, parse_criteria, presets_payload
 from football_platform.api.profile import DATA_SOURCE, build_profile
 from football_platform.database.connection import database_url
 
@@ -78,6 +80,31 @@ def create_app(db_url: str | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="No analytics for this player and season")
         metrics = repository.player_season_metrics(conn, str(player_id), str(season_id))
         return build_profile(row, metrics, float(row["min_minutes"]))
+
+    @app.get("/api/scouting/presets")
+    def scouting_presets() -> list[dict]:
+        return presets_payload()
+
+    @app.get("/api/scouting")
+    def scouting(
+        conn: Conn,
+        position_group: PositionGroup,
+        criterion: Annotated[list[str], Query(description="metric_key:min_percentile, 1 to 6 times")],
+        season_id: UUID | None = None,
+        min_possession: Annotated[float | None, Query(ge=0, le=100)] = None,
+        max_possession: Annotated[float | None, Query(ge=0, le=100)] = None,
+        limit: Annotated[int, Query(ge=1, le=200)] = 50,
+        near_miss_points: Annotated[float, Query(ge=0, le=20)] = DEFAULT_NEAR_MISS_POINTS,
+    ) -> dict:
+        try:
+            criteria = parse_criteria(criterion, position_group)
+        except InvalidCriteriaError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from None
+        rows = repository.scouting_population(
+            conn, position_group.value, [c.metric_key for c in criteria],
+            str(season_id) if season_id else None, min_possession, max_possession,
+        )
+        return build_scouting_result(rows, criteria, limit, near_miss_points)
 
     @app.get("/api/compare")
     def compare(

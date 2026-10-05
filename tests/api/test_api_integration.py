@@ -74,3 +74,10 @@ def test_compare_endpoint_validates_its_input(client):
     assert client.get("/api/compare", params={"ps": [ref, "bad:id"]}).status_code == 422
     missing = "00000000-0000-0000-0000-000000000000:00000000-0000-0000-0000-000000000000"
     assert client.get("/api/compare", params={"ps": [ref, missing]}).status_code == 404
+
+
+def test_scouting_endpoint_validates_criteria(client):
+    ok = client.get("/api/scouting", params={"position_group": "striker", "criterion": ["npxg:50"]})
+    assert ok.status_code == 200 and ok.json()["population_size"] == 0  # synthetic data: nobody eligible
+    bad = client.get("/api/scouting", params={"position_group": "striker", "criterion": ["gk_claims:50"]})
+    assert bad.status_code == 422

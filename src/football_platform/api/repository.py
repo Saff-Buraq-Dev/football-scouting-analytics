@@ -88,3 +88,33 @@ def player_season_metrics(conn: psycopg.Connection, player_id: str, season_id: s
         SELECT metric_key, total, value, percentile, regressed, reliability, regressed_sd
         FROM player_season_metrics WHERE player_id = %s AND season_id = %s""", (player_id, season_id))
     return {row.pop("metric_key"): row for row in rows}
+
+
+def scouting_population(conn: psycopg.Connection, position_group: str, metric_keys: list[str],
+                        season_id: str | None, min_possession: float | None,
+                        max_possession: float | None) -> list[dict[str, Any]]:
+    """Eligible players of a group in the latest snapshot's population, one row per (player, metric)."""
+    conditions = ["ps.position_group = %s", "ps.eligible", "ps.season_id = ANY(r.population_seasons)"]
+    params: list[Any] = [metric_keys, position_group]
+    if season_id:
+        conditions.append("ps.season_id = %s")
+        params.append(season_id)
+    if min_possession is not None:
+        conditions.append("ps.team_possession_pct >= %s")
+        params.append(min_possession)
+    if max_possession is not None:
+        conditions.append("ps.team_possession_pct <= %s")
+        params.append(max_possession)
+    return _rows(conn, f"""
+        SELECT ps.player_id, ps.season_id, coalesce(p.known_name, p.name) AS player_name,
+               {TEAM_NAMES} AS teams, c.name AS competition, s.label AS season_label,
+               ps.minutes, ps.team_possession_pct, ps.primary_role,
+               m.metric_key, m.percentile, m.value, m.reliability
+        FROM player_seasons ps
+        JOIN analytics_runs r ON r.id = ps.analytics_run_id
+        JOIN players p ON p.id = ps.player_id
+        JOIN seasons s ON s.id = ps.season_id
+        JOIN competitions c ON c.id = s.competition_id
+        LEFT JOIN player_season_metrics m
+               ON m.player_id = ps.player_id AND m.season_id = ps.season_id AND m.metric_key = ANY(%s)
+        WHERE {' AND '.join(conditions)}""", params)
