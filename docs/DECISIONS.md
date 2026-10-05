@@ -514,7 +514,7 @@ Status: Accepted (hosting chosen by the developer: self-hosted Portainer)
 Context: The portfolio needs a live demo. The full database is about 3.4 GB, and StatsBomb data must not be redistributed (D004), so it cannot be baked into a public image.
 
 Decision:
-- **One Docker image** containing code only: the FastAPI app also serves the built frontend (same origin, no extra web server), and the same image runs the data bootstrap. It is multi-arch (amd64 and arm64) and published to GHCR by CI after all tests pass.
+- **One Docker image** containing code only: the FastAPI app also serves the built frontend (same origin, no extra web server), and the same image runs the data bootstrap. It is multi-arch (amd64 and arm64) and published to **Docker Hub** (`safsaf90/football-scouting-analytics`, the developer's registry) by CI after all tests pass, using repository secrets.
 - **Bootstrap service** (`deploy/bootstrap.sh`): on first start it downloads StatsBomb Open Data on the host, loads PostgreSQL and computes both analytics snapshots, then deletes raw files. It is idempotent.
 - **A fresh install pins the audited release** (commit `4b73468`), not the newest data, because the coverage review (D010) is only valid for that release.
 - **Portainer stack** (`deploy/portainer-stack.yml`): PostgreSQL without a published port, the bootstrap, and the app. Operations guide: `deploy/README.md`.
@@ -523,4 +523,4 @@ Reason: Licence-compliant (data never leaves the host in raw form and is never s
 
 Alternatives considered: shipping a database dump (redistribution); a slim demo database built elsewhere (still redistribution of event data); a separate Nginx container for the frontend (an extra service for no benefit).
 
-Consequences: The first start takes about 15 minutes and needs about 4 GB RAM (measured peak 3.4 GB). New GHCR packages are private by default: the developer must make the package public or give Portainer a token.
+Consequences: The first start takes about 15 minutes and needs about 4 GB RAM (measured peak 3.4 GB). Publishing needs the `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets; without them CI skips publishing with a warning.

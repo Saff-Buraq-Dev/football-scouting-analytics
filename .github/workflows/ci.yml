@@ -51,29 +51,46 @@ jobs:
       - run: npm run build
 
   image:
-    name: Publish Docker image (code only, no data)
+    name: Publish Docker image to Docker Hub (code only, no data)
     needs: [backend, frontend]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+    env:
+      IMAGE: docker.io/safsaf90/football-scouting-analytics
+      # Repository secrets (Settings -> Secrets and variables -> Actions); see deploy/README.md.
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - name: Check Docker Hub credentials
+        id: creds
+        run: |
+          if [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
+            echo "::warning::DOCKERHUB_USERNAME / DOCKERHUB_TOKEN secrets are not set: image not published."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.creds.outputs.ready == 'true'
+        uses: actions/checkout@v4
+      - if: steps.creds.outputs.ready == 'true'
+        uses: docker/setup-qemu-action@v3
+      - if: steps.creds.outputs.ready == 'true'
+        uses: docker/setup-buildx-action@v3
+      - if: steps.creds.outputs.ready == 'true'
+        uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - if: steps.creds.outputs.ready == 'true'
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/saff-buraq-dev/football-scouting-analytics:latest
-            ghcr.io/saff-buraq-dev/football-scouting-analytics:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -1,6 +1,6 @@
 # Deploying on a self-hosted Portainer
 
-The stack runs three services from one image (`ghcr.io/saff-buraq-dev/football-scouting-analytics`):
+The stack runs three services from one image (`safsaf90/football-scouting-analytics` on Docker Hub):
 
 | Service | Role |
 |---|---|
@@ -19,10 +19,15 @@ The image contains code only. Football data is downloaded directly from StatsBom
 
 ## Steps
 
-1. **Image.** GitHub publishes `ghcr.io/saff-buraq-dev/football-scouting-analytics` on every push to `main`
-   (CI job "Publish Docker image"). It is public (linked to this public repository), so Portainer needs no
-   credentials. If the package is ever made private, add `ghcr.io` as a registry in Portainer with a GitHub token
-   that has `read:packages`.
+1. **Image.** GitHub Actions builds and pushes `safsaf90/football-scouting-analytics` (amd64 + arm64) to Docker Hub
+   on every push to `main` that passes the tests. One-time setup:
+   - Docker Hub → Account settings → **Personal access tokens** → generate a token with *Read & Write* access.
+   - GitHub repository → Settings → **Secrets and variables → Actions** → add `DOCKERHUB_USERNAME` = `safsaf90`
+     and `DOCKERHUB_TOKEN` = the token.
+   - Re-run the latest CI workflow (Actions tab → *Re-run all jobs*), or push a commit.
+
+   Without these secrets the CI publishing step is skipped with a warning. A public Docker Hub repository needs no
+   credentials in Portainer. If you make it private, add Docker Hub as a registry in Portainer.
 2. In Portainer: **Stacks → Add stack**. Name it `football-scouting`, choose *Web editor* and paste
    [`portainer-stack.yml`](portainer-stack.yml), or choose *Repository* and point to this repository with compose path
    `deploy/portainer-stack.yml`.

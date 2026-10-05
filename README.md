@@ -83,7 +83,7 @@ Tests: `.venv/bin/pytest` (database tests run when PostgreSQL is reachable) and 
 
 ## Deploy (Docker / Portainer)
 
-One image (`ghcr.io/saff-buraq-dev/football-scouting-analytics`, code only) runs the web app and a one-shot bootstrap that downloads the data on your host. See [deploy/README.md](deploy/README.md) and [deploy/portainer-stack.yml](deploy/portainer-stack.yml).
+One image ([`safsaf90/football-scouting-analytics`](https://hub.docker.com/r/safsaf90/football-scouting-analytics) on Docker Hub, code only) runs the web app and a one-shot bootstrap that downloads the data on your host. See [deploy/README.md](deploy/README.md) and [deploy/portainer-stack.yml](deploy/portainer-stack.yml).
 
 ## Data and licensing
 
