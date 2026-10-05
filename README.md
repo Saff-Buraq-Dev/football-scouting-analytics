@@ -19,7 +19,8 @@ Provider (StatsBomb open data) → Adapter → Canonical model → Analytics →
 | 4 Basic football analytics | done: player-season metrics, per 90, percentiles, goalkeeping, regressed estimates (4.1) |
 | 5 Player profiles | done: API + web interface (search, profile) |
 | 6 Player comparison | done: 2–4 players, validated difference test |
-| 7 Scouting | next |
+| 7 Scouting | done: role presets, weight-free ranking (Pareto), near misses |
+| 8 Team analysis | next |
 
 See [ROADMAP.md](ROADMAP.md).
 
@@ -74,5 +75,5 @@ StatsBomb Open Data is provided under the [StatsBomb Public Data User Agreement]
 | [PROJECT.md](PROJECT.md) | objectives, scope |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | layers, adapter contract, canonical model |
 | [docs/FOOTBALL_ANALYTICS.md](docs/FOOTBALL_ANALYTICS.md) | analytical methodology |
-| [docs/DECISIONS.md](docs/DECISIONS.md) | decision log (D001–D019) |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | decision log (D001–D020) |
 | [docs/data/](docs/data/) | StatsBomb coverage audit, data dictionary, mapping specification |

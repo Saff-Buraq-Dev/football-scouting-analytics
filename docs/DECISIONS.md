@@ -45,6 +45,7 @@ Consequences:
 | D017 | Phase 4.1: ratio minimums, goalkeeper metrics, regressed estimates, no possession adjustment | Accepted |
 | D018 | Player profiles: analytics snapshot in PostgreSQL, FastAPI, React + TypeScript | Accepted |
 | D019 | Player comparison: grouped bars, no radar, 95 % difference test on regressed estimates | Accepted |
+| D020 | Scouting: threshold screening, Pareto tiers, maximin, near misses, no weighted score | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -411,3 +412,26 @@ Reason: The rule is validated on held-out data. Clear differences persist 88–9
 Alternatives considered: radar/pizza charts (popular in football media, misleading); showing raw differences without a test (invites over-interpretation); pairwise tests between all players (6 verdicts per metric for 4 players, unreadable).
 
 Consequences: The verdict reflects sampling noise only, not team context or role. Interception differences are less persistent (73 %), which is documented. Ratios have no difference test in v1.
+
+---
+
+### Decision D020 — Scouting without a weighted score
+
+Date: 2026-10-05
+
+Status: Accepted
+
+Context: Scouting needs to filter and order candidates on several criteria. A weighted score would need weights the data cannot justify (CLAUDE.md: no arbitrary scoring systems).
+
+Decision:
+- **Screening**: 1–6 criteria "metric ≥ X-th percentile" within one position group (eligible players, complete seasons). A ratio without enough attempts fails its criterion. Context filters: competition, team possession range.
+- **Ordering**: Pareto tiers (non-dominated sorting), then weakest criterion (maximin), then minutes.
+- **Near misses**: players failing exactly one criterion by ≤ 5 points (adjustable) are listed separately.
+- **Role presets**: 8 editable presets documented in FOOTBALL_ANALYTICS.md. They pre-fill criteria and carry no hidden logic.
+- Selected candidates can be sent to the comparison view (D019).
+
+Reason: Filters and dominance are transparent and weight-free, and every ordering decision can be explained in one sentence. The half-season validation showed that hard thresholds are brittle but the selections are sound: shortlisted players stay at the 70th–86th percentile later on. That justified near misses.
+
+Alternatives considered: weighted composite score (arbitrary weights); screening on regressed estimates (tested, no gain); similarity search "players like X" (planned for Phase 9).
+
+Consequences: Two tier-1 candidates are not ordered against each other by the method, and that choice is left to the scout. Shortlists must be presented as a starting point, which the UI states.

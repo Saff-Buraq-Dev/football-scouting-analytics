@@ -271,7 +271,7 @@ src/football_platform/
   pipeline/         # download, run adapters, validate, write Parquet, load database
   analytics/        # Phase 4: player-match counts, player-season per 90, percentiles (pandas)
   reports/          # Phase 4: database -> analytics -> report files + analytics snapshot (D018)
-  api/              # Phase 5-6: FastAPI, read-only, aggregated data only (profiles, comparison)
+  api/              # Phase 5-7: FastAPI, read-only, aggregated data only (profiles, comparison, scouting)
 frontend/           # Phase 5: React + TypeScript (Vite)
 scripts/
   discovery/        # Phase 1B exploration scripts (stdlib only, not application code)

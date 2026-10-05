@@ -555,3 +555,80 @@ Reproduce: `.venv/bin/python scripts/validation/phase6_validation.py`. 977 playe
 - **Interceptions** persist less (73 %): they depend on match context (opponent, score, team style), which changes between the two halves. Treat interception differences with extra caution.
 - **Goals**: over half a season, only **2 %** of player pairs can be told apart, against 38 % for progressive passes. Goals are a poor criterion for separating two players. Prefer npxG and shot volume.
 - Full-season comparisons have smaller standard deviations than half-seasons, so more pairs are "clear" in the application than in this test.
+
+---
+
+# Phase 7 — Scouting
+
+Status: implemented (decision D020).
+
+## Football question
+
+> "In a position group, which players match the profile I am looking for, and how do I order the candidates **without inventing weights**?"
+
+A weighted score (e.g. 40 % tackles + 30 % interceptions + 30 % recoveries) needs weights that the data cannot justify. Two scouts would produce two rankings, neither more "correct". CLAUDE.md forbids undocumented scoring systems. The scouting tool therefore uses **filters plus dominance**, and no composite score.
+
+## 1. Screening (filters)
+
+- Population: one position group, eligible players (≥ 900 minutes), complete seasons. Percentiles are the ones of the profile (same reference population).
+- Criteria: "metric ≥ X-th percentile" (1–6 criteria). For ratios, a player whose ratio is not reliable (too few attempts, Phase 4.1 §1) **does not pass** the criterion: the requirement cannot be verified.
+- Context filters: competition, team possession range (e.g. to find ball-winners in high-possession teams, where defensive volume is not inflated by having little of the ball, D017).
+
+## 2. Ordering without weights
+
+**Pareto tiers.** Candidate A *dominates* B when A's percentile is at least B's on every criterion and strictly higher on at least one. Tier 1 = candidates dominated by nobody. Tier 2 = candidates dominated only by tier-1 players, and so on (non-dominated sorting).
+
+- Football reading: a tier-1 player is one for whom **no other candidate is better on everything you asked for**. Two tier-1 players are better on different criteria, and choosing between them is a scouting judgement, not a calculation.
+
+**Within a tier: weakest criterion (maximin).** Candidates are sorted by their *lowest* criterion percentile, highest first. This is a standard decision rule ("no weak point first") that needs no weights. Ties are broken by minutes played, so larger samples come first.
+
+## 3. Role presets
+
+Presets pre-fill criteria for common roles. They are **editable starting points, not models**. Thresholds are round conventional cut-offs (60th, 70th, 75th, 80th percentile).
+
+| Preset | Group | Criteria (min percentile) | Football intent |
+|---|---|---|---|
+| Ball-winning midfielder | central midfield | tackles 70, interceptions 60, ball recoveries 60 | wins the ball back |
+| Deep-lying playmaker | central midfield | progressive passes 80, passes into final third 70, pass completion 60 | moves the ball forward from deep |
+| Creative winger / AM | attacking mid / winger | xA 75, key passes 70, progressive carries 60 | creates chances and carries the ball |
+| Goal-threat striker | striker | npxG 75, np shots 70 | gets into scoring positions |
+| Pressing forward | striker | pressures 75, npxG 50 | defends from the front while still threatening |
+| Attacking full-back | full-back | passes into final third 70, xA 60, progressive carries 60 | contributes in the final third |
+| Ball-playing centre-back | centre-back | progressive passes 75, pass completion 60, aerial win % 50 | progresses play while defending |
+| Sweeper keeper | goalkeeper | sweeper actions 70, pass completion 50 | defends space behind the line, takes part in build-up |
+
+## 4. Near misses
+
+Players who fail **exactly one** criterion by at most *t* percentile points (default 5, user-adjustable) are listed separately, with the missed criterion and the gap. Thresholds are noisy (see validation): a player at the 68th percentile is not meaningfully different from one at the 70th.
+
+## Limitations
+
+- Percentiles are observed values: a candidate near a threshold may pass or fail by chance. Reliability is shown, near misses are listed, and shortlist stability is measured (below).
+- Dominance treats every criterion as equally relevant, but chooses no trade-off between them.
+- No age, contract or market value (not in the data). This is a *performance* screen, not a full recruitment process.
+
+## Validation of scouting (2026-10-05)
+
+Reproduce: `cd scripts/validation && ../../.venv/bin/python phase7_validation.py`. For each preset, shortlists and near misses are built on first-half-season data and followed in the second half.
+
+| Preset | Shortlist | Still pass every criterion | Mean criterion pct later | Near misses | Mean pct later |
+|---|---:|---:|---:|---:|---:|
+| Ball-winning midfielder | 21 | 14 % | 70 | 5 | 68 |
+| Deep-lying playmaker | 16 | 69 % | 86 | 5 | 80 |
+| Creative winger / AM | 24 | 33 % | 76 | 5 | 69 |
+| Goal-threat striker | 23 | 48 % | 73 | 3 | 69 |
+| Pressing forward | 9 | 22 % | 60 | 5 | 56 |
+| Attacking full-back | 18 | 33 % | 75 | 6 | 70 |
+| Ball-playing centre-back | 13 | 46 % | 78 | 1 | 71 |
+| Sweeper keeper | 13 | 38 % | 68 | 1 | 30 |
+
+(Mean criterion percentile: 50 = an average player of the group.)
+
+**Findings:**
+
+1. **Hard thresholds are brittle.** Only 14–69 % of shortlisted players meet every threshold again in the next half-season. Requiring *all* criteria multiplies the chances of failing one by noise. The ball-winning preset is the most fragile, consistent with defensive actions being context-dependent (Phase 6).
+2. **The selection itself is sound.** Shortlisted players stay well above average later on (70th–86th percentile on the criteria, 60th for the pressing forward).
+3. **Near misses perform almost as well** (68th–80th percentile; the goalkeeper row has a single player and is not interpretable). Listing them is justified.
+4. **Screening on regressed estimates did not help.** Same shortlists and outcomes: among players above 900 minutes, regression barely changes the order. So observed percentiles are kept, for transparency.
+
+**Consequence for use:** a shortlist is a starting point for video and live scouting, not a decision. The interface states this next to the results.

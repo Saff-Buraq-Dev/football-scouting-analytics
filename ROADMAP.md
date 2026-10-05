@@ -181,7 +181,9 @@ Objectives:
 
 ## Phase 7 — Scouting
 
-Status: NOT STARTED
+Status: DONE (2026-10-05)
+
+Result: screening with role presets, Pareto tiers without a weighted score, near misses, possession context filter, shortlist stability validated (D020).
 
 Objectives:
 
