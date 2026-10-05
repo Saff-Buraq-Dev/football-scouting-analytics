@@ -209,6 +209,8 @@ Objectives:
 
 ## Phase 9 — Advanced analytics
 
+Progress: player similarity DONE (2026-10-05, D022).
+
 Potential features:
 
 - player similarity;

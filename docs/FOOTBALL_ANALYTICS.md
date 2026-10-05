@@ -713,3 +713,67 @@ Underlying performance (npxG difference, xPts) predicts future results better th
 - Counter-attack reliance: Leicester City is in the top 5.
 - Points above expected: Atlético Madrid, Real Madrid and Leicester City (+14.8 points over the season). Below expected: Toulouse, Aston Villa and Hellas Verona.
 - Leicester City: 81 points (the official total). Possession at the 15th percentile of the league, long passes at the 90th, counter-attack share at the 95th, chance quality per shot at the 100th. This is the documented profile of that title season.
+
+---
+
+# Phase 9a — Player similarity
+
+Status: implemented (decision D022).
+
+## Football question
+
+> "Which players had a statistical profile most like player X, in the same role?"
+
+The typical use is replacing a departing player, or finding a cheaper version of a target. The answer describes **how a player played** (his statistical style and volume). It does not say how good he is, and it does not judge suitability for another team.
+
+## Method (required elements, CLAUDE.md "Player similarity")
+
+| Element | Choice | Reason |
+|---|---|---|
+| Population | eligible players (≥ 900 min) of the **same position group**, complete seasons, four leagues pooled | comparable roles; same reference population as percentiles |
+| Variables | the count metrics of the position template (Phase 5), as **regressed per-90 estimates** | the role's relevant actions. Regressed values keep sampling noise from looking like style (Phase 4.1). Ratios are excluded in v1: they are unreliable for low volumes |
+| Normalisation | z-score within the position group | each metric counts on the same scale, whatever its unit |
+| Weighting | none chosen by hand (see distance) | no unjustified weights |
+| Distance | **selected by validation** among four candidates (below) | |
+| Displayed similarity | **similarity percentile**: share of the group that is *farther* from the target than this candidate ("closer than 97 % of central midfielders") | interpretable and population-based, no arbitrary "% similar" |
+| Explanation | per-metric z-scores of target and candidate, with the largest differences listed | the scout sees *where* players match or differ |
+
+### Choosing the distance: the fingerprint test
+
+A similarity method is useful only if it recognises **the same player** across two independent samples. For each position group, players with ≥ 450 minutes in each half-season get a first-half profile and a second-half profile. For every second-half profile, all first-half profiles are ranked by distance, and we record where the same player's first-half profile lands.
+
+Candidates:
+
+1. Euclidean distance on z-scores of **observed** per-90 values;
+2. Euclidean distance on z-scores of **regressed** per-90 values;
+3. **Mahalanobis** distance on regressed values (corrects for correlated metrics, e.g. tackles and interceptions both measuring defensive volume);
+4. **Cosine** distance on regressed z-scores (shape of the profile, ignoring overall volume).
+
+Selection criterion: highest top-1 and top-5 self-retrieval rates, and lowest median self-rank. A random method would rank a player's own profile first with probability 1/N.
+
+## Limitations
+
+- Statistical similarity is not quality-adjusted: a player at the same "shape" but lower volume ranks lower (except with cosine distance).
+- Team context (possession, tactics) shapes a player's numbers. Two similar profiles may reflect similar team roles rather than similar players.
+- One season, no age, no physical data.
+- Positions are formation slots: the template defines the role (Phase 5 limitation).
+
+## Validation of similarity (2026-10-05)
+
+Reproduce: `cd scripts/validation && ../../.venv/bin/python phase9_similarity_validation.py`. Fingerprint test on 903 players (≥ 450 min in each half; centre-backs, full-backs, central midfielders, attacking midfielders/wingers, strikers. Goalkeepers have only 2 template count metrics and are excluded).
+
+| Method | Same player ranked 1st | Top 5 | Top 10 % | Median rank |
+|---|---:|---:|---:|---:|
+| Random | 0.6 % | 2.8 % | 10 % | ~92 |
+| Euclidean, observed per 90 | 15.1 % | 34.1 % | 59.6 % | 12 |
+| **Euclidean, regressed per 90 (selected)** | 14.6 % | 34.0 % | 59.6 % | 12 |
+| Mahalanobis, regressed | 11.4 % | 30.5 % | 53.6 % | 17 |
+| Cosine, regressed | 14.5 % | 35.8 % | 62.3 % | 12 |
+
+**Reading:**
+
+- A statistical profile is a real but noisy fingerprint. A player's other half-season is found about 25 times more often than chance, but it is the single nearest profile only 15 % of the time. **Similarity lists are neighbourhoods**, and the UI says so.
+- Mahalanobis performs worse. Inverting the covariance over-weights rare directions, which are mostly noise in one season of data. Rejected.
+- Euclidean and cosine are statistically tied (gaps of about 1–2 points, with a standard error of about 1.6). **Euclidean on regressed values** is selected because it keeps volume (a scout replacing a high-volume player cares about volume) and regressed values protect low-minute targets.
+
+**Face validity** (full season): Kanté → Idrissa Gueye, Augusto Fernández, Kirchhoff, Illarramendi, Tioté, Casemiro. Fàbregas → Verratti, Jorginho, Kroos. Vardy → Fernando Torres, Diego Costa, Lukaku. Marcelo → Florenzi, Mendy, Alex Telles, Alex Sandro.

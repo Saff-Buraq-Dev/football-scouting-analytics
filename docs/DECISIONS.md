@@ -47,6 +47,7 @@ Consequences:
 | D019 | Player comparison: grouped bars, no radar, 95 % difference test on regressed estimates | Accepted |
 | D020 | Scouting: threshold screening, Pareto tiers, maximin, near misses, no weighted score | Accepted |
 | D021 | Team analysis: exact xPts, PPDA, style shares, within-league percentiles | Accepted |
+| D022 | Player similarity: regressed z-scores, Euclidean distance chosen by fingerprint test | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -459,3 +460,25 @@ Reason: npxG difference and xPts predicted second-half points better than first-
 Alternatives considered: simulated xPts (non-deterministic); pooled percentiles (league bias); PPDA without fouls (deviates from the public definition, which would make results harder to compare with other sources).
 
 Consequences: Teams from different leagues are compared on values, not percentiles. xPts ignore game state and treat rebound shots as independent.
+
+---
+
+### Decision D022 — Player similarity
+
+Date: 2026-10-05
+
+Status: Accepted
+
+Context: "Find players like X" is a core recruitment tool. CLAUDE.md requires a documented methodology and forbids arbitrary similarity percentages.
+
+Decision:
+- Variables: the regressed per-90 count metrics of the target's position template. Population: eligible players of the same group (four leagues pooled). Normalisation: z-scores within the group.
+- Distance: **Euclidean**, selected among four candidates by a fingerprint test (recognising the same player across two half-seasons).
+- Displayed: similarity percentile ("closer than X % of the group") and the two largest per-metric differences. No "% similar" score.
+- Endpoint `/api/players/{id}/seasons/{id}/similar`, and a "Players with a similar profile" section on the player page with a link to the comparison view.
+
+Reason: The fingerprint test gives an objective selection criterion. Euclidean on regressed values ties for best, keeps volume information and is robust for low-minute targets. Mahalanobis was measurably worse.
+
+Alternatives considered: cosine (tied, but ignores volume); Mahalanobis (worse, over-weights noise); hand-weighted metrics (unjustified); clustering into "player types" (labels would be arbitrary; possible future work).
+
+Consequences: Results are a neighbourhood of comparable profiles (own profile in the top 10 % about 60 % of the time), not an exact match. Goalkeepers have too few template count metrics for a meaningful profile (2): their similarity rests on claims and sweeper actions only, a documented limitation.
