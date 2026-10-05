@@ -155,3 +155,87 @@ export function fetchComparison(refs: string[], signal?: AbortSignal) {
   refs.forEach((ref) => query.append("ps", ref));
   return getJson<Comparison>(`/api/compare?${query}`, signal);
 }
+
+export interface ScoutingPreset {
+  key: string;
+  label: string;
+  position_group: string;
+  intent: string;
+  criteria: { key: string; label: string; min_percentile: number }[];
+}
+
+export interface MetricDefinition {
+  key: string;
+  label: string;
+  kind: "count" | "ratio";
+  position_groups: string[] | null;
+}
+
+export interface ScoutCriterionValue {
+  key: string;
+  percentile: number | null;
+  value: number | null;
+  reliability_band: ReliabilityBand | null;
+  passes: boolean;
+}
+
+interface ScoutPlayer {
+  player_id: string;
+  season_id: string;
+  player_name: string;
+  teams: string[];
+  competition: string;
+  season_label: string;
+  minutes: number;
+  team_possession_pct: number | null;
+  primary_role: string | null;
+  criteria: ScoutCriterionValue[];
+}
+
+export interface ScoutResult extends ScoutPlayer {
+  rank: number;
+  tier: number;
+  weakest_percentile: number;
+}
+
+export interface NearMiss extends ScoutPlayer {
+  gap: number;
+  missed: string;
+}
+
+export interface ScoutingResponse {
+  criteria: { key: string; label: string; min_percentile: number; unit: "per_90" | "ratio" }[];
+  population_size: number;
+  shortlisted: number;
+  tier_1: number;
+  results: ScoutResult[];
+  near_misses: NearMiss[];
+  near_miss_points: number;
+  method: string;
+  data_source: DataSource;
+}
+
+export interface ScoutingQuery {
+  position_group: string;
+  criteria: { key: string; min_percentile: number }[];
+  season_id?: string;
+  min_possession?: number;
+  max_possession?: number;
+}
+
+export function fetchPresets(signal?: AbortSignal) {
+  return getJson<ScoutingPreset[]>("/api/scouting/presets", signal);
+}
+
+export function fetchMetricDefinitions(signal?: AbortSignal) {
+  return getJson<MetricDefinition[]>("/api/metrics", signal);
+}
+
+export function runScouting(query: ScoutingQuery, signal?: AbortSignal) {
+  const params = new URLSearchParams({ position_group: query.position_group, limit: "60" });
+  query.criteria.forEach((c) => params.append("criterion", `${c.key}:${c.min_percentile}`));
+  if (query.season_id) params.set("season_id", query.season_id);
+  if (query.min_possession !== undefined) params.set("min_possession", String(query.min_possession));
+  if (query.max_possession !== undefined) params.set("max_possession", String(query.max_possession));
+  return getJson<ScoutingResponse>(`/api/scouting?${params}`, signal);
+}
