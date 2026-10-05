@@ -85,6 +85,6 @@ def player_season(conn: psycopg.Connection, player_id: str, season_id: str) -> d
 
 def player_season_metrics(conn: psycopg.Connection, player_id: str, season_id: str) -> dict[str, dict[str, Any]]:
     rows = _rows(conn, """
-        SELECT metric_key, total, value, percentile, regressed, reliability
+        SELECT metric_key, total, value, percentile, regressed, reliability, regressed_sd
         FROM player_season_metrics WHERE player_id = %s AND season_id = %s""", (player_id, season_id))
     return {row.pop("metric_key"): row for row in rows}

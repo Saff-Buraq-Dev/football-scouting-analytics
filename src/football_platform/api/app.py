@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from football_platform.analytics.definitions import ALL_METRICS, PositionGroup
 from football_platform.api import repository
+from football_platform.api.comparison import MAX_PLAYERS, MIN_PLAYERS, build_comparison
 from football_platform.api.profile import DATA_SOURCE, build_profile
 from football_platform.database.connection import database_url
 
@@ -77,6 +78,28 @@ def create_app(db_url: str | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="No analytics for this player and season")
         metrics = repository.player_season_metrics(conn, str(player_id), str(season_id))
         return build_profile(row, metrics, float(row["min_minutes"]))
+
+    @app.get("/api/compare")
+    def compare(
+        conn: Conn,
+        ps: Annotated[list[str], Query(description="player_id:season_id, 2 to 4 times")],
+    ) -> dict:
+        if not MIN_PLAYERS <= len(ps) <= MAX_PLAYERS:
+            raise HTTPException(status_code=422, detail=f"Compare between {MIN_PLAYERS} and {MAX_PLAYERS} player-seasons")
+        if len(set(ps)) != len(ps):
+            raise HTTPException(status_code=422, detail="Each player-season can appear only once")
+        rows, metrics = [], []
+        for item in ps:
+            try:
+                player_id, season_id = (str(UUID(part)) for part in item.split(":"))
+            except ValueError:
+                raise HTTPException(status_code=422, detail=f"Invalid player-season {item!r}") from None
+            row = repository.player_season(conn, player_id, season_id)
+            if row is None:
+                raise HTTPException(status_code=404, detail=f"No analytics for {item}")
+            rows.append(row)
+            metrics.append(repository.player_season_metrics(conn, player_id, season_id))
+        return build_comparison(rows, metrics)
 
     return app
 

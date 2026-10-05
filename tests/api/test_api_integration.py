@@ -64,3 +64,13 @@ def test_population_size_is_given_even_when_the_player_is_not_ranked(client):
     profile = client.get(f"/api/players/{hit['player_id']}/seasons/{hit['season_id']}").json()
     # The synthetic league has no eligible striker: an explicit 0, not a missing value.
     assert profile["population"]["size"] == 0
+
+
+def test_compare_endpoint_validates_its_input(client):
+    hit = client.get("/api/players", params={"q": "player 1"}).json()["results"][0]
+    ref = f"{hit['player_id']}:{hit['season_id']}"
+    assert client.get("/api/compare", params={"ps": [ref]}).status_code == 422
+    assert client.get("/api/compare", params={"ps": [ref, ref]}).status_code == 422
+    assert client.get("/api/compare", params={"ps": [ref, "bad:id"]}).status_code == 422
+    missing = "00000000-0000-0000-0000-000000000000:00000000-0000-0000-0000-000000000000"
+    assert client.get("/api/compare", params={"ps": [ref, missing]}).status_code == 404
