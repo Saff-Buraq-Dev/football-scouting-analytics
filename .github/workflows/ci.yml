@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Python tests (with PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: football
+          POSTGRES_PASSWORD: football_ci
+          POSTGRES_DB: football
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U football -d football"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      # Integration tests create and drop their own temporary database on this server.
+      DATABASE_URL: postgresql://football:football_ci@localhost:5432/football
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Tests (unit + database integration, synthetic data only)
+        run: pytest -q
+
+  frontend:
+    name: Frontend tests and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
