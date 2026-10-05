@@ -1,0 +1,47 @@
+# Portainer stack (Stacks -> Add stack -> Web editor), or `docker compose -f deploy/portainer-stack.yml up -d`.
+# Required environment variable: POSTGRES_PASSWORD (letters and digits only: it is used in a URL).
+# Optional: APP_PORT (default 8080), IMAGE_TAG (default latest).
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: football
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the stack environment}
+      POSTGRES_DB: football
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U football -d football"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+    # No published port: the database is only reachable inside the stack.
+
+  bootstrap:
+    image: ghcr.io/saff-buraq-dev/football-scouting-analytics:${IMAGE_TAG:-latest}
+    command: ["/app/deploy/bootstrap.sh"]
+    environment:
+      DATABASE_URL: postgresql://football:${POSTGRES_PASSWORD}@db:5432/football
+    volumes:
+      - pipeline-data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    image: ghcr.io/saff-buraq-dev/football-scouting-analytics:${IMAGE_TAG:-latest}
+    environment:
+      DATABASE_URL: postgresql://football:${POSTGRES_PASSWORD}@db:5432/football
+    ports:
+      - "${APP_PORT:-8080}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  pipeline-data:
