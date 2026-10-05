@@ -20,6 +20,8 @@ from football_platform.api import repository
 from football_platform.api.comparison import MAX_PLAYERS, MIN_PLAYERS, build_comparison
 from football_platform.api.scouting import InvalidCriteriaError, build_scouting_result, parse_criteria, presets_payload
 from football_platform.api.profile import DATA_SOURCE, build_profile
+from football_platform.api.team import LABELS as TEAM_LABELS
+from football_platform.api.team import build_team_profile, team_list_item
 from football_platform.database.connection import database_url
 
 # Vite dev server. A deployed frontend is served from the same origin.
@@ -105,6 +107,25 @@ def create_app(db_url: str | None = None) -> FastAPI:
             str(season_id) if season_id else None, min_possession, max_possession,
         )
         return build_scouting_result(rows, criteria, limit, near_miss_points)
+
+    @app.get("/api/teams")
+    def teams(conn: Conn, season_id: UUID | None = None) -> dict:
+        sid = str(season_id) if season_id else None
+        metrics = repository.team_season_metrics(conn, sid)
+        items = [
+            team_list_item(t, metrics.get((str(t["team_id"]), str(t["season_id"])), {}))
+            for t in repository.team_seasons(conn, sid)
+        ]
+        return {"teams": items, "metric_labels": dict(TEAM_LABELS), "data_source": DATA_SOURCE}
+
+    @app.get("/api/teams/{team_id}/seasons/{season_id}")
+    def team_profile(conn: Conn, team_id: UUID, season_id: UUID) -> dict:
+        team = repository.team_season(conn, str(team_id), str(season_id))
+        if team is None:
+            raise HTTPException(status_code=404, detail="No analytics for this team and season")
+        metrics = repository.team_season_metrics(conn, str(season_id), str(team_id)).get(
+            (str(team_id), str(season_id)), {})
+        return build_team_profile(team, metrics, repository.team_squad(conn, str(team_id), str(season_id)))
 
     @app.get("/api/compare")
     def compare(

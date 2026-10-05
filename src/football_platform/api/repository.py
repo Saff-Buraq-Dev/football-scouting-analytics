@@ -118,3 +118,52 @@ def scouting_population(conn: psycopg.Connection, position_group: str, metric_ke
         LEFT JOIN player_season_metrics m
                ON m.player_id = ps.player_id AND m.season_id = ps.season_id AND m.metric_key = ANY(%s)
         WHERE {' AND '.join(conditions)}""", params)
+
+
+TEAM_SEASON_SELECT = """
+    SELECT ts.team_id, ts.season_id, t.name AS team_name, c.name AS competition, s.label AS season_label,
+           ts.matches, ts.points, ts.goals_for, ts.goals_against, ts.league_size
+    FROM team_seasons ts
+    JOIN teams t ON t.id = ts.team_id
+    JOIN seasons s ON s.id = ts.season_id
+    JOIN competitions c ON c.id = s.competition_id"""
+
+
+def team_seasons(conn: psycopg.Connection, season_id: str | None) -> list[dict[str, Any]]:
+    where, params = ("WHERE ts.season_id = %s", [season_id]) if season_id else ("", [])
+    return _rows(conn, f"{TEAM_SEASON_SELECT} {where} ORDER BY c.name, ts.points DESC, t.name", params)
+
+
+def team_season(conn: psycopg.Connection, team_id: str, season_id: str) -> dict[str, Any] | None:
+    rows = _rows(conn, f"{TEAM_SEASON_SELECT} WHERE ts.team_id = %s AND ts.season_id = %s", (team_id, season_id))
+    return rows[0] if rows else None
+
+
+def team_season_metrics(conn: psycopg.Connection, season_id: str | None,
+                        team_id: str | None = None) -> dict[tuple[str, str], dict[str, dict[str, Any]]]:
+    """(team_id, season_id) -> metric_key -> {value, percentile}."""
+    conditions, params = [], []
+    if season_id:
+        conditions.append("season_id = %s")
+        params.append(season_id)
+    if team_id:
+        conditions.append("team_id = %s")
+        params.append(team_id)
+    where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    result: dict[tuple[str, str], dict[str, dict[str, Any]]] = {}
+    for row in _rows(conn, f"SELECT team_id, season_id, metric_key, value, percentile FROM team_season_metrics {where}",
+                     params):
+        result.setdefault((str(row["team_id"]), str(row["season_id"])), {})[row["metric_key"]] = {
+            "value": row["value"], "percentile": row["percentile"]}
+    return result
+
+
+def team_squad(conn: psycopg.Connection, team_id: str, season_id: str) -> list[dict[str, Any]]:
+    """Players who appeared for the team (minutes over the whole season, possibly with another club too)."""
+    return _rows(conn, """
+        SELECT ps.player_id, ps.season_id, coalesce(p.known_name, p.name) AS player_name,
+               ps.primary_role, ps.position_group, ps.minutes, ps.eligible,
+               cardinality(ps.team_ids) > 1 AS multiple_clubs
+        FROM player_seasons ps JOIN players p ON p.id = ps.player_id
+        WHERE ps.season_id = %s AND %s = ANY(ps.team_ids)
+        ORDER BY ps.minutes DESC""", (season_id, team_id))
