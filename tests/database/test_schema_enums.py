@@ -5,9 +5,11 @@ from importlib import resources
 
 import pytest
 
+from football_platform.analytics.definitions import PositionGroup
 from football_platform.canonical import enums
 
-SCHEMA = resources.files("football_platform.database").joinpath("migrations/0001_canonical_schema.sql").read_text()
+MIGRATIONS = resources.files("football_platform.database").joinpath("migrations")
+SCHEMA = "\n".join(f.read_text() for f in sorted(MIGRATIONS.iterdir(), key=lambda f: f.name) if f.name.endswith(".sql"))
 
 # (column as written in SQL) -> canonical enum. Columns sharing a name share a vocabulary.
 COLUMN_ENUMS = {
@@ -18,6 +20,8 @@ COLUMN_ENUMS = {
     "status": enums.MatchStatus,
     "line": enums.PositionLine,
     "role": enums.PositionRole,
+    "primary_role": enums.PositionRole,
+    "position_group": PositionGroup,
     "side": enums.Side,
     "type": enums.EventType,
     "outcome": enums.Outcome,

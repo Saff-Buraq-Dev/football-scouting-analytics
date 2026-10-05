@@ -26,6 +26,8 @@ from football_platform.analytics.shrinkage import add_regressed_estimates
 from football_platform.canonical.capabilities import ProviderCapabilities
 from football_platform.canonical.enums import CoverageScope, EventType
 from football_platform.database.connection import connect
+from football_platform.database.migrate import apply_migrations
+from football_platform.reports.snapshot import store_snapshot
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 OUTPUT_DIR = PROJECT_ROOT / "data" / "analytics"
@@ -124,7 +126,7 @@ def build_report(conn: psycopg.Connection, min_minutes: float) -> pd.DataFrame:
         inputs.seasons.rename(columns={"id": "season_id", "label": "season"}), on="season_id"
     )
     report["teams"] = report["team_ids"].map(lambda ids: " / ".join(teams[i] for i in ids))
-    return report.drop(columns=["team_ids"])
+    return report
 
 
 def print_summary(report: pd.DataFrame) -> None:
@@ -151,15 +153,25 @@ def print_summary(report: pd.DataFrame) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--min-minutes", type=float, default=DEFAULT_MIN_MINUTES)
+    parser.add_argument("--no-store", action="store_true", help="do not replace the database snapshot")
     args = parser.parse_args()
 
-    with connect() as conn:
+    # Autocommit: each `conn.transaction()` block is then an independent transaction.
+    with connect(autocommit=True) as conn:
+        apply_migrations(conn)
         report = build_report(conn, args.min_minutes)
+        run_id = None
+        if not args.no_store:
+            run_id = store_snapshot(
+                conn, report, args.min_minutes, sorted(report["population_seasons"].iloc[0].split(",")),
+                report["source_provider"].iloc[0],
+            )
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    report.to_parquet(OUTPUT_DIR / "player_seasons.parquet", index=False)
-    report.to_csv(OUTPUT_DIR / "player_seasons.csv", index=False)
+    files = report.assign(team_ids=report["team_ids"].map(list))
+    files.to_parquet(OUTPUT_DIR / "player_seasons.parquet", index=False)
+    files.to_csv(OUTPUT_DIR / "player_seasons.csv", index=False)
     print_summary(report)
-    print(json.dumps({"rows": len(report), "output": str(OUTPUT_DIR)}, indent=2))
+    print(json.dumps({"rows": len(report), "output": str(OUTPUT_DIR), "analytics_run_id": run_id}, indent=2))
 
 
 if __name__ == "__main__":

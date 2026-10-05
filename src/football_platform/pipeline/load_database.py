@@ -161,7 +161,8 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
     canonical_dir = args.canonical_dir or latest_canonical_dir()
-    with connect() as conn:
+    # Autocommit: each `conn.transaction()` block is then an independent transaction.
+    with connect(autocommit=True) as conn:
         apply_migrations(conn)
         counts = load(canonical_dir, conn)
     print(json.dumps({"loaded_from": str(canonical_dir), "row_counts": counts}, indent=2))
