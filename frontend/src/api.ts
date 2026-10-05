@@ -107,3 +107,51 @@ export function fetchSeasons(signal?: AbortSignal) {
 export function fetchProfile(playerId: string, seasonId: string, signal?: AbortSignal) {
   return getJson<Profile>(`/api/players/${playerId}/seasons/${seasonId}`, signal);
 }
+
+export type Verdict = "clear" | "within_noise" | "not_testable";
+
+export interface ComparedPlayer {
+  index: number;
+  player_id: string;
+  season_id: string;
+  name: string;
+  teams: string[];
+  competition: string;
+  season_label: string;
+  position_group: string | null;
+  primary_role: string | null;
+  minutes: number;
+  eligible: boolean;
+  team_possession_pct: number | null;
+  population_size: number | null;
+}
+
+export interface ComparedMetric {
+  key: string;
+  label: string;
+  unit: "per_90" | "ratio";
+  values: (MetricView & { regressed_sd: number | null })[];
+  leader: { index: number | null; verdict: Verdict };
+  pair_verdict?: Verdict;
+}
+
+export interface Comparison {
+  players: ComparedPlayer[];
+  same_position_group: boolean;
+  warnings: ("mixed_position_groups" | "some_players_not_ranked" | "different_competitions")[];
+  themes: { key: string; label: string; possession_sensitive: boolean; metrics: ComparedMetric[] }[];
+  verdict_rule: string;
+  data_source: DataSource;
+}
+
+export const MAX_COMPARED = 4;
+
+export function playerSeasonRef(playerId: string, seasonId: string): string {
+  return `${playerId}:${seasonId}`;
+}
+
+export function fetchComparison(refs: string[], signal?: AbortSignal) {
+  const query = new URLSearchParams();
+  refs.forEach((ref) => query.append("ps", ref));
+  return getJson<Comparison>(`/api/compare?${query}`, signal);
+}

@@ -1,4 +1,5 @@
 import { Link, Route, Routes } from "react-router-dom";
+import { ComparePage } from "./pages/ComparePage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { SearchPage } from "./pages/SearchPage";
 
@@ -20,12 +21,17 @@ export function App() {
           <PitchMark />
           Scouting Analytics <small>player-season profiles</small>
         </Link>
-        <div className="topbar-meta">2015/16 · Premier League, La Liga, Serie A, Ligue 1</div>
+        <nav className="topnav">
+          <Link to="/">Search</Link>
+          <Link to="/compare">Compare</Link>
+          <span className="topbar-meta">2015/16 · Premier League, La Liga, Serie A, Ligue 1</span>
+        </nav>
       </header>
       <main>
         <Routes>
           <Route path="/" element={<SearchPage />} />
           <Route path="/players/:playerId/seasons/:seasonId" element={<ProfilePage />} />
+          <Route path="/compare" element={<ComparePage />} />
         </Routes>
       </main>
       <footer className="footer">

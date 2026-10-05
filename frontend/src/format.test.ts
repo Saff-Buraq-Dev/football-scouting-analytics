@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPercentile, formatShare, formatTotal, formatValue } from "./format";
+import { formatPercentile, formatShare, formatTotal, formatValue, verdictText } from "./format";
 
 describe("formatValue", () => {
   it("shows per-90 counts with two decimals", () => {
@@ -33,5 +33,20 @@ describe("percentiles and shares", () => {
   });
   it("formats position shares", () => {
     expect(formatShare(0.854)).toBe("85%");
+  });
+});
+
+describe("verdictText", () => {
+  const two = ["N'Golo Kanté", "Cesc Fàbregas"];
+  it("names the player who is clearly ahead", () => {
+    expect(verdictText({ leader: { index: 1, verdict: "clear" }, pair_verdict: "clear" }, two)).toBe("Fàbregas clearly ahead");
+  });
+  it("uses the pair verdict for two players", () => {
+    expect(verdictText({ leader: { index: 0, verdict: "clear" }, pair_verdict: "within_noise" }, two)).toBe("Within noise");
+  });
+  it("speaks about the top two for three or four players", () => {
+    expect(verdictText({ leader: { index: 2, verdict: "within_noise" } }, [...two, "Marco Verratti"])).toBe(
+      "Top two within noise",
+    );
   });
 });

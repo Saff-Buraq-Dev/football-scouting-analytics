@@ -31,7 +31,12 @@ export function ProfilePage() {
 
   return (
     <>
-      <Link className="back" to="/">← Search</Link>
+      <div className="profile-actions">
+        <Link className="back" to="/">← Search</Link>
+        <Link className="button" to={`/compare?ps=${playerId}:${seasonId}`}>
+          Compare with other players
+        </Link>
+      </div>
 
       <section className="card">
         <div className="profile-head">

@@ -204,3 +204,80 @@ details.all-metrics .table { margin-top: 10px; }
   .metric-row, .scale-legend { grid-template-columns: minmax(110px, 1fr) 1.4fr 56px 32px; gap: 10px; }
   .topbar-meta { display: none; }
 }
+
+/* ---- Navigation --------------------------------------------------------- */
+.topnav { display: flex; align-items: center; gap: 18px; }
+.topnav a { text-decoration: none; color: var(--text-secondary); font-weight: 550; }
+.topnav a:hover { color: var(--text-primary); }
+.profile-actions { display: flex; justify-content: space-between; align-items: baseline; }
+.button {
+  display: inline-block; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface-1); text-decoration: none; font-weight: 550; color: var(--text-primary);
+}
+.button:hover { background: var(--surface-2); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---- Comparison --------------------------------------------------------- */
+/* Categorical slots 1-4 of the validated palette (adjacent-pair checks pass in both modes;
+   two light-mode slots are below 3:1, so every bar carries its value as text). */
+:root {
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+  }
+}
+
+.cmp-players { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.cmp-player { display: grid; grid-template-columns: 12px 1fr auto; gap: 10px; align-items: start; padding: 14px 16px; }
+.swatch { width: 12px; height: 12px; border-radius: 3px; margin-top: 4px; }
+.remove {
+  border: none; background: none; font-size: 18px; line-height: 1; color: var(--text-muted); cursor: pointer; padding: 0 2px;
+}
+.remove:hover { color: var(--text-primary); }
+.cmp-add { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+
+.picker { position: relative; }
+.picker input {
+  width: 100%; font: inherit; color: var(--text-primary); background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+}
+.picker-results {
+  position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none;
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+}
+.picker-results button {
+  width: 100%; text-align: left; display: flex; flex-direction: column; gap: 1px; padding: 7px 8px;
+  border: none; background: none; color: var(--text-primary); font: inherit; border-radius: 6px; cursor: pointer;
+}
+.picker-results button:hover:not(:disabled) { background: var(--surface-2); }
+.picker-results button:disabled { opacity: 0.45; cursor: default; }
+.picker-results .muted { font-size: 12px; }
+
+.cmp-warnings { margin: 0 0 18px; display: grid; gap: 4px; }
+
+.cmp-metric { padding: 10px 0; border-top: 1px solid var(--gridline); }
+.cmp-metric:first-of-type { border-top: none; }
+.cmp-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.cmp-head .metric-sub { flex: 1; }
+.verdict { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.verdict-clear { color: var(--text-primary); }
+.verdict-within_noise, .verdict-not_testable { color: var(--text-muted); font-weight: 500; }
+
+.cmp-bars { display: grid; gap: 2px; }
+.cmp-bar-row { display: grid; grid-template-columns: 1fr 56px 34px; gap: 10px; align-items: center; }
+.cmp-track { position: relative; height: 8px; background: var(--surface-2); border-radius: 0 4px 4px 0; }
+.cmp-fill { position: absolute; inset: 0 auto 0 0; border-radius: 0 4px 4px 0; }
+.cmp-track:hover .cmp-fill, .cmp-track:focus-visible .cmp-fill { filter: brightness(1.1); }
+.cmp-track:hover .tooltip, .cmp-track:focus-visible .tooltip { visibility: visible; opacity: 1; }
+.cmp-empty { font-size: 11.5px; color: var(--text-muted); }
+.cmp-value { text-align: right; font-variant-numeric: tabular-nums; font-size: 12.5px; font-weight: 600; }
+.cmp-pct { text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text-muted); }
+.cmp-rule { margin-top: 16px; font-size: 12.5px; }

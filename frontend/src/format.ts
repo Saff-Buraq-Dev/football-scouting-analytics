@@ -1,5 +1,5 @@
 // Display rules for metrics (docs/FOOTBALL_ANALYTICS.md, "Phase 5 — Player profile").
-import type { MetricView, PercentileNote, ReliabilityBand } from "./api";
+import type { ComparedMetric, MetricView, PercentileNote, ReliabilityBand, Verdict } from "./api";
 
 // Ratios that read naturally as percentages. npxG per shot stays a decimal (an xG value).
 const PERCENT_METRICS = new Set(["pass_completion", "long_pass_share", "aerial_win_pct", "gk_np_save_pct"]);
@@ -67,4 +67,23 @@ export function formatMinutes(minutes: number): string {
 
 export function formatShare(share: number | null): string {
   return share === null ? "—" : `${Math.round(share * 100)}%`;
+}
+
+/** Short display name: last word of the name ("Cesc Fàbregas" -> "Fàbregas"). */
+export function shortName(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return parts[parts.length - 1];
+}
+
+/** Plain-language verdict on whether players really differ on a metric (Phase 6). */
+export function verdictText(
+  metric: Pick<ComparedMetric, "leader" | "pair_verdict">,
+  playerNames: string[],
+): string {
+  const verdict: Verdict = playerNames.length === 2 ? metric.pair_verdict ?? "not_testable" : metric.leader.verdict;
+  if (verdict === "clear" && metric.leader.index !== null) {
+    return `${shortName(playerNames[metric.leader.index])} clearly ahead`;
+  }
+  if (verdict === "within_noise") return playerNames.length === 2 ? "Within noise" : "Top two within noise";
+  return "Not tested";
 }
