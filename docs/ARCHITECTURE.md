@@ -53,7 +53,7 @@ Related documents: [DATA_PROVIDERS.md](DATA_PROVIDERS.md) (why these providers),
 
 ### Dependency rule
 
-Imports may only point **downwards** in this order: `api → analytics → canonical`, `providers → canonical`. Also `reports → analytics, database`, `pipeline → providers, database`, and `database → canonical`. The full table is enforced in `tests/test_architecture.py`.
+Imports may only point **downwards** in this order: `api → analytics → canonical`, `providers → canonical`. Also `reports → analytics, database`, `pipeline → providers, database`, `api → analytics, database`, and `database → canonical`. The full table is enforced in `tests/test_architecture.py`.
 
 - `analytics`, `api` and `frontend` must **never** import from `providers/`.
 - `canonical` imports nothing from the project except itself.
@@ -270,8 +270,9 @@ src/football_platform/
   database/         # connection + SQL migrations (PostgreSQL)
   pipeline/         # download, run adapters, validate, write Parquet, load database
   analytics/        # Phase 4: player-match counts, player-season per 90, percentiles (pandas)
-  reports/          # Phase 4: database -> analytics -> report files
-  api/              # later (Phase 5+)
+  reports/          # Phase 4: database -> analytics -> report files + analytics snapshot (D018)
+  api/              # Phase 5: FastAPI, read-only, aggregated data only
+frontend/           # Phase 5: React + TypeScript (Vite)
 scripts/
   discovery/        # Phase 1B exploration scripts (stdlib only, not application code)
 tests/

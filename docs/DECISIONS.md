@@ -43,6 +43,7 @@ Consequences:
 | D015 | PostgreSQL schema = canonical model; plain SQL migrations; transactional reload | Accepted |
 | D016 | Player-season metrics v1: definitions, 900-minute threshold, position-group percentiles | Accepted |
 | D017 | Phase 4.1: ratio minimums, goalkeeper metrics, regressed estimates, no possession adjustment | Accepted |
+| D018 | Player profiles: analytics snapshot in PostgreSQL, FastAPI, React + TypeScript | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -366,3 +367,25 @@ Reason: Every refinement was validated on the data. Regressed estimates cut seco
 Alternatives considered: PAdj sigmoid (over-corrects); data-calibrated elasticity per action (unstable out of sample); linear per-opportunity normalisation (implies an even stronger elasticity of 1).
 
 Consequences: Defensive rankings partly reflect team style. The UI must show team possession next to them. Revisit possession adjustment with multiple seasons.
+
+---
+
+### Decision D018 — Player profiles: snapshot, API and frontend
+
+Date: 2026-10-05
+
+Status: Accepted
+
+Context: Phase 5 exposes player-season profiles to scouts. Recomputing analytics from 5.3M events per request (~25 s) is not viable, and the API must never redistribute raw provider data (D004).
+
+Decision:
+- **Analytics snapshot.** `reports.player_season_report` stores its results in `player_seasons` and `player_season_metrics` (migration 0002), replacing the previous snapshot in one transaction. `analytics_runs` records each run (threshold, population, provider). The computation stays in tested Python code; the tables only hold its output. This refines D015 ("no metrics stored"): metrics are *computed* in code and *cached* in the database.
+- **API**: FastAPI in a new `api/` layer (imports canonical, analytics, database). Read-only endpoints: health, seasons, metric definitions, player search (accent-insensitive via `unaccent`, migration 0003), player-season profile. **No endpoint serves events or raw provider data** (tested).
+- **Profile assembly** is pure Python (`api/profile.py`): position templates (`analytics/profile_templates.py`), reliability bands, reasons for missing percentiles.
+- **Frontend**: React + TypeScript + Vite in `frontend/`. No UI framework: a small token-based stylesheet with light and dark themes. Percentiles are drawn as meters in a single validated hue (a percentile is descriptive, so there is no good/bad colour), with a median marker, tooltips on hover and keyboard focus, and a full table as the accessible equivalent.
+
+Reason: The database read path makes profiles instant. FastAPI keeps one language for backend and analytics. React + TypeScript is the expected standard for a professional frontend, and plain CSS tokens keep the design system explicit and small.
+
+Alternatives considered: computing on request (too slow); a materialised SQL view (moves logic into SQL); server-rendered templates or HTMX (simpler, but less suited to the interactive comparison and scouting views of Phases 6–7); a UI framework such as Tailwind or MUI (faster start, weaker design identity).
+
+Consequences: The snapshot must be refreshed (`player_season_report`) after each ingestion or methodology change. Before any public deployment, the official StatsBomb logo must be added to the UI (User Agreement §1.4).

@@ -153,7 +153,9 @@ Purpose: prove provider-agnosticism with no licensing risk.
 
 ## Phase 5 — Player profiles
 
-Status: NOT STARTED
+Status: DONE (2026-10-05)
+
+Result: analytics snapshot in PostgreSQL, FastAPI (search + profile), React + TypeScript profile page with position templates, percentile meters, reliability and possession context (D018). Pending before public deployment: the official StatsBomb logo.
 
 Objectives:
 

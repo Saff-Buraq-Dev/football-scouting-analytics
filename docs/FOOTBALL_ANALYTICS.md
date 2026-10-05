@@ -443,3 +443,45 @@ First half of each season → second half (players with ≥ 450 minutes in each 
 | assists | 0.13 | 0.28 |
 
 **Football interpretation:** frequent actions (passes, tackles, shots) describe a player reliably after a few hundred minutes. **Goals and assists per 90 remain mostly noise even over a full season**, while npxG and xA carry far more signal. This is the quantitative reason to judge finishers by npxG and creators by xA, not by goals and assists. It also explains why the 900-minute threshold matters more for some metrics than others: Pastore (909 min) keeps 2nd place in progressive passes after regression, because that metric is reliable at his sample size.
+
+---
+
+# Phase 5 — Player profile
+
+Status: implemented (decision D018).
+
+## Questions the profile answers, in reading order
+
+1. **Who and where?** Name, club(s), league, season. The season is shown prominently: the data is historical (2015/16), not current form.
+2. **How much did he play, and can we trust the numbers?** Minutes, appearances, starts, primary position and its share of his minutes. An explicit note appears when he is below the 900-minute threshold and therefore not ranked.
+3. **What kind of player is he compared with his position peers?** Percentiles grouped by theme, using a template for each position group (below).
+4. **In what context?** Team possession next to defensive metrics (D017), the reference population (size, seasons, threshold), and the data source.
+
+The profile deliberately shows **no overall rating**: a single score would need a weighting of metrics that the project has not justified (CLAUDE.md, "Do not invent methodologies").
+
+## Position templates
+
+Each position group shows the metrics that matter most for its role. Other metrics remain available in the full table.
+
+| Theme | Striker | Att. mid / winger | Central mid | Full-back | Centre-back | Goalkeeper |
+|---|---|---|---|---|---|---|
+| Shooting | npxG, np shots, npxG/shot, np goals | npxG, np shots, np goals | npxG | | | |
+| Creation | xA, key passes, passes into box | xA, key passes, passes into box, assists | xA, key passes | xA, key passes | | |
+| Progression | progressive carries | progressive passes, progressive carries, final-third passes | progressive passes, progressive carries, final-third passes, pass completion | progressive passes, progressive carries, final-third passes | progressive passes, pass completion | long-pass share, pass completion |
+| Defending | pressures | pressures, tackles | tackles, interceptions, ball recoveries, pressures | tackles, interceptions, pressures | interceptions, tackles, ball recoveries | |
+| Aerial | aerials won, aerial win % | | | aerial win % | aerials won, aerial win % | |
+| Goalkeeping | | | | | | save %, shots on target faced, claims, sweeper actions |
+
+## How each value is displayed
+
+| Element | Rule |
+|---|---|
+| Value | per 90 for counts, raw for ratios, with the season total |
+| Percentile | 0–100 within the reference population. **Not shown** (with a reason) when the player is below the minutes threshold or a ratio has too few attempts |
+| Reliability | from the regressed-estimate weight *w* (Phase 4.1 §4): **high** w ≥ 0.8, **medium** 0.5 ≤ w < 0.8, **low** w < 0.5. These bands are a display convention, chosen so that "low" means the observed value carries less than half signal |
+| Regressed estimate | shown next to the value for count metrics ("expected underlying rate") |
+| Unavailable | metrics unavailable from the source (capability) are shown as unavailable, never as 0 |
+
+## Data source
+
+Every profile states "Data: StatsBomb Open Data (2015/16)". Before any public deployment, the official StatsBomb logo from their media pack must be added (User Agreement §1.4). The API serves derived, aggregated metrics only (D004).
