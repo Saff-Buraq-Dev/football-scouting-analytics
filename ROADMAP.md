@@ -209,7 +209,7 @@ Objectives:
 
 ## Phase 9 — Advanced analytics
 
-Progress: player similarity DONE (2026-10-05, D022).
+Progress: player similarity DONE (D022), shot zone maps DONE (D023), 2026-10-05.
 
 Potential features:
 

@@ -48,6 +48,7 @@ Consequences:
 | D020 | Scouting: threshold screening, Pareto tiers, maximin, near misses, no weighted score | Accepted |
 | D021 | Team analysis: exact xPts, PPDA, style shares, within-league percentiles | Accepted |
 | D022 | Player similarity: regressed z-scores, Euclidean distance chosen by fingerprint test | Accepted |
+| D023 | Shot maps as zone aggregates, never individual shots through the API | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -482,3 +483,21 @@ Reason: The fingerprint test gives an objective selection criterion. Euclidean o
 Alternatives considered: cosine (tied, but ignores volume); Mahalanobis (worse, over-weights noise); hand-weighted metrics (unjustified); clustering into "player types" (labels would be arbitrary; possible future work).
 
 Consequences: Results are a neighbourhood of comparable profiles (own profile in the top 10 % about 60 % of the time), not an exact match. Goalkeepers have too few template count metrics for a meaningful profile (2): their similarity rests on claims and sweeper actions only, a documented limitation.
+
+---
+
+### Decision D023 — Shot maps as zone aggregates
+
+Date: 2026-10-05
+
+Status: Accepted
+
+Context: Shot maps are a standard football visual. Plotting every shot through the API would serve event-level provider data, which D004 forbids for public use.
+
+Decision: Shots are aggregated into six zones defined by the pitch markings (six-yard box, central and wide penalty area) and a 25 m edge-of-box line. For each zone the view gives shots, goals, npxG, npxG per shot and share of shots, compared with the player's position group or the team's league. Endpoints `/api/players/{id}/seasons/{id}/shots` and `/api/teams/{id}/seasons/{id}/shots` return zone aggregates only (a test asserts that no coordinates are returned). The UI draws a half-pitch shaded by share of shots (single hue, opacity = magnitude) with a table equivalent.
+
+Reason: Licence compliance, and robustness: zone shares and xG per shot are harder to over-read than about 80 individual dots. Validation confirmed the zones are consistent (monotonic xG per shot, exact conservation).
+
+Alternatives considered: individual shot dots through the API (event-level data, D004); hexbin grids (finer, but sparse per player and harder to read); individual-shot static images (possible later for local publication with attribution).
+
+Consequences: Within-zone detail (exact angle, distance) is not shown. Penalties are reported separately.

@@ -777,3 +777,65 @@ Reproduce: `cd scripts/validation && ../../.venv/bin/python phase9_similarity_va
 - Euclidean and cosine are statistically tied (gaps of about 1–2 points, with a standard error of about 1.6). **Euclidean on regressed values** is selected because it keeps volume (a scout replacing a high-volume player cares about volume) and regressed values protect low-minute targets.
 
 **Face validity** (full season): Kanté → Idrissa Gueye, Augusto Fernández, Kirchhoff, Illarramendi, Tioté, Casemiro. Fàbregas → Verratti, Jorginho, Kroos. Vardy → Fernando Torres, Diego Costa, Lukaku. Marcelo → Florenzi, Mendy, Alex Telles, Alex Sandro.
+
+---
+
+# Phase 9b — Shot zone maps
+
+Status: implemented (decision D023).
+
+## Football questions
+
+- **Player:** where does he shoot from, and how good are those chances? (A poacher in the six-yard box is a different profile from a long-range shooter with the same shot volume.)
+- **Team:** where does it create, and where does it concede?
+
+## Why zones, not individual shots
+
+1. **Licensing (D004):** an API returning every shot's position is event-level data. Zones are aggregates.
+2. **Robustness:** a season shot map of about 80 dots invites over-reading single shots. Zone totals with xG per shot are easier to interpret correctly.
+
+Individual-shot maps may later be produced as local static images for publication with attribution (allowed as "published analysis"), never served by the API.
+
+## Zones
+
+Canonical metres, attacking towards x = 105, goal centre y = 34. Box dimensions are from the Laws of the Game; the 25 m "edge of the box" line is a common analytics convention.
+
+| Zone | Definition | Typical chance |
+|---|---|---|
+| Six-yard box | x ≥ 99.5 and \|y − 34\| ≤ 9.16 | very high |
+| Box, central | in the penalty area, \|y − 34\| ≤ 9.16, outside the six-yard box | high |
+| Box, wide | in the penalty area, 9.16 < \|y − 34\| ≤ 20.16 | medium, tight angle |
+| Edge of the box | 80 ≤ x < 88.5 and \|y − 34\| ≤ 20.16 | low |
+| Outside, wide | x ≥ 80 and \|y − 34\| > 20.16 | very low |
+| Long range | x < 80 | very low |
+
+Penalties are excluded from zones and reported separately. Shoot-outs are excluded.
+
+## Displayed per zone
+
+Shots, goals, npxG, npxG per shot, and the **share of the player's shots** in the zone next to the **position group's share** (eligible players, same population as percentiles). For teams: shots for and against, with the league average share.
+
+## Validation
+
+1. **Conservation:** zone totals equal the season's non-penalty shots, goals and npxG.
+2. **Sanity of zones:** npxG per shot must fall from the six-yard box to long range. A violation would reveal a coordinate or zone error.
+
+## Validation of shot zones (2026-10-05)
+
+Reproduce: `.venv/bin/python scripts/validation/phase9_shot_zones_validation.py` (all 37,488 non-penalty shots of the D011 slice).
+
+| Zone | Shots | Share | Goals | Conversion | npxG per shot |
+|---|---:|---:|---:|---:|---:|
+| Six-yard box | 2,905 | 7.7 % | 822 | 28.3 % | 0.276 |
+| Box, central | 13,123 | 35.0 % | 1,899 | 14.5 % | 0.137 |
+| Box, wide | 6,597 | 17.6 % | 370 | 5.6 % | 0.053 |
+| Edge of the box | 10,838 | 28.9 % | 409 | 3.8 % | 0.038 |
+| Outside, wide | 175 | 0.5 % | 15 | 8.6 % | 0.008 |
+| Long range | 3,850 | 10.3 % | 54 | 1.4 % | 0.017 |
+
+- **Sanity:** npxG per shot falls monotonically from the six-yard box to long range.
+- **Conservation:** zone totals equal all non-penalty shots (37,488) and npxG (3,433.44).
+- **Calibration of the provider's xG:** in every large zone, the real conversion rate is close to the mean xG (28.3 % vs 0.276; 14.5 % vs 0.137; 3.8 % vs 0.038). This is an independent check that StatsBomb xG is well calibrated on this data.
+- **Anomaly:** wide shots outside the box convert at 8.6 % against 0.8 % expected. This is a tiny sample (175 shots), plausibly crosses that ended in the net, so no conclusion is drawn.
+
+**Face validity:** Vardy takes 27 % of his shots from the wide part of the box (strikers: 19 %), consistent with his runs into the channels. Messi takes 43 % from the central box (attacking midfielders and wingers: 29 %). Goal totals match the record: Vardy 19 non-penalty goals + 5 penalties = 24, Messi 23 + 3 = 26.
