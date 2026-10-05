@@ -7,6 +7,7 @@ Docs: http://127.0.0.1:8000/docs
 """
 
 from collections.abc import Iterator
+from functools import lru_cache
 from typing import Annotated
 from uuid import UUID
 
@@ -21,6 +22,7 @@ from football_platform.api import repository
 from football_platform.api.comparison import MAX_PLAYERS, MIN_PLAYERS, build_comparison
 from football_platform.api.scouting import InvalidCriteriaError, build_scouting_result, parse_criteria, presets_payload
 from football_platform.api.profile import DATA_SOURCE, build_profile
+from football_platform.api.shots import player_shot_map, team_shot_map
 from football_platform.api.similarity import SimilarityUnavailableError, build_similarity
 from football_platform.api.team import LABELS as TEAM_LABELS
 from football_platform.api.team import build_team_profile, team_list_item
@@ -43,6 +45,12 @@ def create_app(db_url: str | None = None) -> FastAPI:
             yield conn
 
     Conn = Annotated[psycopg.Connection, Depends(connection)]
+
+    @lru_cache(maxsize=16)
+    def group_baseline(position_group: str) -> list[dict]:
+        """Shots of a position group: the same for every request until the API restarts."""
+        with psycopg.connect(db_url or database_url(), autocommit=True) as conn:
+            return repository.group_shots(conn, position_group)
 
     @app.get("/api/health")
     def health(conn: Conn) -> dict:
@@ -101,6 +109,25 @@ def create_app(db_url: str | None = None) -> FastAPI:
             return build_similarity(rows, features, f"{player_id}:{season_id}", limit)
         except SimilarityUnavailableError as error:
             raise HTTPException(status_code=422, detail=str(error)) from None
+
+    @app.get("/api/players/{player_id}/seasons/{season_id}/shots")
+    def player_shots(conn: Conn, player_id: UUID, season_id: UUID) -> dict:
+        row = repository.player_season(conn, str(player_id), str(season_id))
+        if row is None:
+            raise HTTPException(status_code=404, detail="No analytics for this player and season")
+        group = row.get("position_group")
+        baseline = group_baseline(group) if group else []
+        return player_shot_map(
+            repository.player_shots(conn, str(player_id), str(season_id)), baseline,
+            group or "none",  # position group key; the frontend words it
+        )
+
+    @app.get("/api/teams/{team_id}/seasons/{season_id}/shots")
+    def team_shots(conn: Conn, team_id: UUID, season_id: UUID) -> dict:
+        if repository.team_season(conn, str(team_id), str(season_id)) is None:
+            raise HTTPException(status_code=404, detail="No analytics for this team and season")
+        shots_for, shots_against = repository.team_shots(conn, str(team_id), str(season_id))
+        return team_shot_map(shots_for, shots_against, repository.league_shots(conn, str(season_id)))
 
     @app.get("/api/scouting/presets")
     def scouting_presets() -> list[dict]:

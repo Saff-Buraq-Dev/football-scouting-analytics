@@ -187,3 +187,36 @@ def similarity_population(conn: psycopg.Connection, position_group: str, metric_
           AND ((ps.eligible AND ps.season_id = ANY(r.population_seasons))
                OR (ps.player_id = %s AND ps.season_id = %s))""",
         (metric_keys, position_group, target_player_id, target_season_id))
+
+
+SHOT_COLUMNS = """e.id, e.period, e.start_x, e.start_y, e.set_piece, e.shot_outcome, m.value AS xg"""
+SHOT_JOIN = """FROM events e
+        JOIN matches mt ON mt.id = e.match_id
+        LEFT JOIN provider_metrics m ON m.event_id = e.id AND m.metric_key = 'xg'"""
+
+
+def player_shots(conn: psycopg.Connection, player_id: str, season_id: str) -> list[dict[str, Any]]:
+    return _rows(conn, f"""SELECT {SHOT_COLUMNS} {SHOT_JOIN}
+        WHERE e.type = 'shot' AND e.player_id = %s AND mt.season_id = %s""", (player_id, season_id))
+
+
+def group_shots(conn: psycopg.Connection, position_group: str) -> list[dict[str, Any]]:
+    """Shots of eligible players of a group in the snapshot population (zone baseline)."""
+    return _rows(conn, f"""SELECT {SHOT_COLUMNS} {SHOT_JOIN}
+        JOIN player_seasons ps ON ps.player_id = e.player_id AND ps.season_id = mt.season_id
+        JOIN analytics_runs r ON r.id = ps.analytics_run_id
+        WHERE e.type = 'shot' AND ps.position_group = %s AND ps.eligible
+          AND ps.season_id = ANY(r.population_seasons)""", (position_group,))
+
+
+def team_shots(conn: psycopg.Connection, team_id: str, season_id: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """(shots for, shots against) in the team's matches of the season."""
+    base = f"""SELECT {SHOT_COLUMNS} {SHOT_JOIN}
+        WHERE e.type = 'shot' AND mt.season_id = %s AND (mt.home_team_id = %s OR mt.away_team_id = %s)"""
+    shots_for = _rows(conn, base + " AND e.team_id = %s", (season_id, team_id, team_id, team_id))
+    shots_against = _rows(conn, base + " AND e.team_id <> %s", (season_id, team_id, team_id, team_id))
+    return shots_for, shots_against
+
+
+def league_shots(conn: psycopg.Connection, season_id: str) -> list[dict[str, Any]]:
+    return _rows(conn, f"SELECT {SHOT_COLUMNS} {SHOT_JOIN} WHERE e.type = 'shot' AND mt.season_id = %s", (season_id,))

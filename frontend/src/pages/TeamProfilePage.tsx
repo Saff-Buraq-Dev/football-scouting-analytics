@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { fetchTeamProfile, type TeamMetricRow, type TeamProfile } from "../api";
+import { fetchTeamProfile, fetchTeamShots, type ShotZonesView, type TeamMetricRow, type TeamProfile } from "../api";
+import { ShotZoneMap } from "../components/ShotZoneMap";
 import { ROLE_LABELS, formatMinutes, formatPercentile, formatTeamValue } from "../format";
 
 function TeamMetric({ row }: { row: TeamMetricRow }) {
@@ -30,6 +31,7 @@ export function TeamProfilePage() {
   const { teamId = "", seasonId = "" } = useParams();
   const [profile, setProfile] = useState<TeamProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [shots, setShots] = useState<{ for: ShotZonesView; against: ShotZonesView } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -37,6 +39,7 @@ export function TeamProfilePage() {
     fetchTeamProfile(teamId, seasonId, controller.signal)
       .then(setProfile)
       .catch((e: Error) => e.name !== "AbortError" && setError(e.message === "not_found" ? "No analytics for this team." : e.message));
+    fetchTeamShots(teamId, seasonId, controller.signal).then(setShots).catch(() => undefined);
     return () => controller.abort();
   }, [teamId, seasonId]);
 
@@ -79,6 +82,13 @@ export function TeamProfilePage() {
           {profile.style.map((row) => <TeamMetric key={row.key} row={row} />)}
         </section>
       </div>
+
+      {shots && (
+        <div className="themes" style={{ marginTop: 18 }}>
+          <ShotZoneMap title="Shots taken" view={shots.for} baselineLabel="league" />
+          <ShotZoneMap title="Shots conceded" view={shots.against} baselineLabel="league" />
+        </div>
+      )}
 
       <section className="card" style={{ marginTop: 18, padding: 0 }}>
         <h2 className="section-title" style={{ padding: "16px 18px 0" }}>Squad by minutes</h2>

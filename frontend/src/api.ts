@@ -317,3 +317,29 @@ export interface SimilarityResponse {
 export function fetchSimilar(playerId: string, seasonId: string, signal?: AbortSignal) {
   return getJson<SimilarityResponse>(`/api/players/${playerId}/seasons/${seasonId}/similar?limit=10`, signal);
 }
+
+export interface ShotZone {
+  key: string;
+  label: string;
+  shots: number;
+  goals: number;
+  npxg: number;
+  npxg_per_shot: number | null;
+  share: number;
+  baseline_share: number;
+  baseline_npxg_per_shot: number | null;
+}
+
+export interface ShotZonesView {
+  zones: ShotZone[];
+  totals: { shots: number; goals: number; npxg: number };
+  penalties: { taken: number; scored: number };
+}
+
+export function fetchPlayerShots(playerId: string, seasonId: string, signal?: AbortSignal) {
+  return getJson<ShotZonesView & { baseline: string }>(`/api/players/${playerId}/seasons/${seasonId}/shots`, signal);
+}
+
+export function fetchTeamShots(teamId: string, seasonId: string, signal?: AbortSignal) {
+  return getJson<{ for: ShotZonesView; against: ShotZonesView }>(`/api/teams/${teamId}/seasons/${seasonId}/shots`, signal);
+}
