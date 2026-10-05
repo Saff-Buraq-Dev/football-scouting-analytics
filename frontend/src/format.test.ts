@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPercentile, formatShare, formatTotal, formatValue, verdictText } from "./format";
+import { formatPercentile, formatShare, formatTeamValue, formatTotal, formatValue, verdictText } from "./format";
 
 describe("formatValue", () => {
   it("shows per-90 counts with two decimals", () => {
@@ -48,5 +48,15 @@ describe("verdictText", () => {
     expect(verdictText({ leader: { index: 2, verdict: "within_noise" } }, [...two, "Marco Verratti"])).toBe(
       "Top two within noise",
     );
+  });
+});
+
+describe("formatTeamValue", () => {
+  it("formats shares, signed differences and possession", () => {
+    expect(formatTeamValue("counter_npxg_share", 0.123)).toBe("12%");
+    expect(formatTeamValue("npxg_diff_per_match", 0.34)).toBe("+0.34");
+    expect(formatTeamValue("goal_diff_per_match", -0.5)).toBe("-0.50");
+    expect(formatTeamValue("possession_pct", 42.57)).toBe("42.6%");
+    expect(formatTeamValue("ppda", null)).toBe("—");
   });
 });

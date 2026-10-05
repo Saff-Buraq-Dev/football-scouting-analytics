@@ -87,3 +87,14 @@ export function verdictText(
   if (verdict === "within_noise") return playerNames.length === 2 ? "Within noise" : "Top two within noise";
   return "Not tested";
 }
+
+// Team metrics shown as percentages (shares). Possession is already a percentage value.
+const TEAM_SHARE_METRICS = new Set(["long_pass_share", "progressive_pass_share", "counter_npxg_share", "set_piece_npxg_share"]);
+
+export function formatTeamValue(key: string, value: number | null): string {
+  if (value === null) return "—";
+  if (key === "possession_pct") return `${value.toFixed(1)}%`;
+  if (TEAM_SHARE_METRICS.has(key)) return `${Math.round(value * 100)}%`;
+  if (key.endsWith("_diff_per_match") || key === "points_vs_expected") return `${value >= 0 ? "+" : ""}${value.toFixed(2)}`;
+  return value.toFixed(2);
+}

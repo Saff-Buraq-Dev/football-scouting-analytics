@@ -239,3 +239,55 @@ export function runScouting(query: ScoutingQuery, signal?: AbortSignal) {
   if (query.max_possession !== undefined) params.set("max_possession", String(query.max_possession));
   return getJson<ScoutingResponse>(`/api/scouting?${params}`, signal);
 }
+
+export interface TeamListItem {
+  team_id: string;
+  season_id: string;
+  team_name: string;
+  competition: string;
+  season_label: string;
+  matches: number;
+  points: number;
+  goals_for: number;
+  goals_against: number;
+  league_size: number | null;
+  metrics: Record<string, number | null>;
+}
+
+export interface TeamMetricRow {
+  key: string;
+  label: string;
+  value: number | null;
+  percentile: number | null;
+  note: string | null;
+}
+
+export interface TeamProfile {
+  team: Omit<TeamListItem, "metrics">;
+  results: TeamMetricRow[];
+  points_vs_expected_per_match: number | null;
+  style: TeamMetricRow[];
+  squad: {
+    player_id: string;
+    season_id: string;
+    player_name: string;
+    primary_role: string | null;
+    position_group: string | null;
+    minutes: number;
+    eligible: boolean;
+    multiple_clubs: boolean;
+  }[];
+  population: { description: string; size: number | null };
+  data_source: DataSource;
+}
+
+export function fetchTeams(seasonId: string, signal?: AbortSignal) {
+  return getJson<{ teams: TeamListItem[]; metric_labels: Record<string, string> }>(
+    `/api/teams?season_id=${seasonId}`,
+    signal,
+  );
+}
+
+export function fetchTeamProfile(teamId: string, seasonId: string, signal?: AbortSignal) {
+  return getJson<TeamProfile>(`/api/teams/${teamId}/seasons/${seasonId}`, signal);
+}

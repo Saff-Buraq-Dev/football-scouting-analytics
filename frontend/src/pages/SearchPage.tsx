@@ -27,7 +27,7 @@ export function SearchPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchSeasons(controller.signal).then(setSeasons).catch(() => undefined);
+    fetchSeasons(controller.signal).then(setSeasons).catch(() => undefined); // optional filter data
     fetchHealth(controller.signal)
       .then((h) => setMinMinutes(h.analytics_run?.min_minutes ?? null))
       .catch(() => undefined);

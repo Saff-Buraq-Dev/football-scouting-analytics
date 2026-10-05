@@ -2,6 +2,8 @@ import { Link, Route, Routes } from "react-router-dom";
 import { ComparePage } from "./pages/ComparePage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ScoutingPage } from "./pages/ScoutingPage";
+import { TeamProfilePage } from "./pages/TeamProfilePage";
+import { TeamsPage } from "./pages/TeamsPage";
 import { SearchPage } from "./pages/SearchPage";
 
 function PitchMark() {
@@ -26,6 +28,7 @@ export function App() {
           <Link to="/">Search</Link>
           <Link to="/scouting">Scouting</Link>
           <Link to="/compare">Compare</Link>
+          <Link to="/teams">Teams</Link>
           <span className="topbar-meta">2015/16 · Premier League, La Liga, Serie A, Ligue 1</span>
         </nav>
       </header>
@@ -35,6 +38,8 @@ export function App() {
           <Route path="/players/:playerId/seasons/:seasonId" element={<ProfilePage />} />
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/scouting" element={<ScoutingPage />} />
+          <Route path="/teams" element={<TeamsPage />} />
+          <Route path="/teams/:teamId/seasons/:seasonId" element={<TeamProfilePage />} />
         </Routes>
       </main>
       <footer className="footer">

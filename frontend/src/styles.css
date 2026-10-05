@@ -307,3 +307,28 @@ details.all-metrics .table { margin-top: 10px; }
 .tier { min-width: 22px; text-align: center; }
 .tier-1 { border-color: var(--accent); color: var(--text-primary); }
 .section-title { font-size: 15px; margin: 0 0 4px; }
+
+/* ---- Teams: scatter maps ------------------------------------------------- */
+.scatter h2 { font-size: 15px; margin: 0 0 4px; }
+.scatter figcaption { margin-bottom: 4px; }
+.scatter { margin: 0; }
+.scatter-wrap { position: relative; }
+.scatter svg { width: 100%; height: auto; display: block; overflow: visible; }
+.scatter .grid { stroke: var(--gridline); stroke-width: 1; }
+.scatter .mean { stroke: var(--baseline); stroke-width: 1; stroke-dasharray: 4 4; }
+.scatter .tick { font-size: 11px; fill: var(--text-muted); font-variant-numeric: tabular-nums; }
+.scatter .axis-label { font-size: 11.5px; fill: var(--text-secondary); }
+.scatter .dot { cursor: pointer; outline: none; }
+.scatter .hit { fill: transparent; }
+.scatter .mark { fill: var(--accent); stroke: var(--surface-1); stroke-width: 2; }
+.scatter .dot:hover .mark, .scatter .dot:focus-visible .mark { fill: var(--text-primary); }
+.scatter .dot.highlight .mark { fill: var(--text-primary); }
+.scatter .dot-label { font-size: 11px; fill: var(--text-secondary); paint-order: stroke; stroke: var(--surface-1); stroke-width: 3px; }
+.scatter-tip {
+  position: absolute; transform: translate(-50%, calc(-100% - 12px)); pointer-events: none; z-index: 5;
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16); font-size: 12px; color: var(--text-secondary); white-space: nowrap;
+  display: flex; flex-direction: column;
+}
+.scatter-tip strong { color: var(--text-primary); font-size: 13px; }
+.team-metric { grid-template-columns: minmax(170px, 1.4fr) 1.6fr 64px 40px; }
