@@ -1,0 +1,70 @@
+// Display rules for metrics (docs/FOOTBALL_ANALYTICS.md, "Phase 5 — Player profile").
+import type { MetricView, PercentileNote, ReliabilityBand } from "./api";
+
+// Ratios that read naturally as percentages. npxG per shot stays a decimal (an xG value).
+const PERCENT_METRICS = new Set(["pass_completion", "long_pass_share", "aerial_win_pct", "gk_np_save_pct"]);
+
+export const POSITION_GROUP_LABELS: Record<string, string> = {
+  goalkeeper: "Goalkeeper",
+  centre_back: "Centre-back",
+  full_back: "Full-back",
+  central_midfield: "Central midfielder",
+  attacking_midfield_winger: "Attacking midfielder / winger",
+  striker: "Striker",
+};
+
+export const POSITION_GROUP_PLURALS: Record<string, string> = {
+  goalkeeper: "goalkeepers",
+  centre_back: "centre-backs",
+  full_back: "full-backs",
+  central_midfield: "central midfielders",
+  attacking_midfield_winger: "attacking midfielders and wingers",
+  striker: "strikers",
+};
+
+export const ROLE_LABELS: Record<string, string> = {
+  GK: "Goalkeeper", CB: "Centre-back", FB: "Full-back", WB: "Wing-back", DM: "Defensive midfield",
+  CM: "Central midfield", WM: "Wide midfield", AM: "Attacking midfield", W: "Winger", CF: "Centre-forward",
+};
+
+export const NOTE_TEXT: Record<PercentileNote, string> = {
+  unavailable: "Not available from this data source",
+  below_minutes_threshold: "Not ranked: below the minutes threshold",
+  insufficient_attempts: "Not ranked: too few attempts",
+  not_ranked: "Not ranked",
+};
+
+export const RELIABILITY_TEXT: Record<ReliabilityBand, string> = {
+  high: "High reliability",
+  medium: "Medium reliability",
+  low: "Low reliability",
+};
+
+export function isPercentMetric(key: string): boolean {
+  return PERCENT_METRICS.has(key);
+}
+
+/** Main value: per 90 for counts, percentage or decimal for ratios. */
+export function formatValue(metric: Pick<MetricView, "key" | "unit" | "value">): string {
+  if (metric.value === null) return "—";
+  if (isPercentMetric(metric.key)) return `${Math.round(metric.value * 100)}%`;
+  return metric.value.toFixed(2);
+}
+
+/** Season total for counts (integers, or one decimal for xG-type values). */
+export function formatTotal(metric: Pick<MetricView, "key" | "unit" | "total">): string | null {
+  if (metric.unit !== "per_90" || metric.total === null) return null;
+  return Number.isInteger(metric.total) ? `${metric.total}` : metric.total.toFixed(1);
+}
+
+export function formatPercentile(percentile: number | null): string {
+  return percentile === null ? "—" : `${Math.round(percentile)}`;
+}
+
+export function formatMinutes(minutes: number): string {
+  return Math.round(minutes).toLocaleString("en-GB");
+}
+
+export function formatShare(share: number | null): string {
+  return share === null ? "—" : `${Math.round(share * 100)}%`;
+}

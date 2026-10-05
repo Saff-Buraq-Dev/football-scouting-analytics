@@ -1,0 +1,37 @@
+import { Link, Route, Routes } from "react-router-dom";
+import { ProfilePage } from "./pages/ProfilePage";
+import { SearchPage } from "./pages/SearchPage";
+
+function PitchMark() {
+  return (
+    <svg className="brand-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <rect x="2.5" y="4.5" width="19" height="15" rx="2" />
+      <line x1="12" y1="4.5" x2="12" y2="19.5" />
+      <circle cx="12" cy="12" r="2.8" />
+    </svg>
+  );
+}
+
+export function App() {
+  return (
+    <div className="shell">
+      <header className="topbar">
+        <Link className="brand" to="/">
+          <PitchMark />
+          Scouting Analytics <small>player-season profiles</small>
+        </Link>
+        <div className="topbar-meta">2015/16 · Premier League, La Liga, Serie A, Ligue 1</div>
+      </header>
+      <main>
+        <Routes>
+          <Route path="/" element={<SearchPage />} />
+          <Route path="/players/:playerId/seasons/:seasonId" element={<ProfilePage />} />
+        </Routes>
+      </main>
+      <footer className="footer">
+        <span>Data: StatsBomb Open Data. Derived, aggregated metrics only.</span>
+        <span>Methodology: docs/FOOTBALL_ANALYTICS.md</span>
+      </footer>
+    </div>
+  );
+}
