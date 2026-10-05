@@ -18,7 +18,7 @@ ALLOWED_IMPORTS = {
     "analytics": {"canonical", "analytics"},
     "database": {"canonical", "database"},
     "pipeline": {"canonical", "providers", "database", "pipeline"},
-    "api": {"canonical", "analytics", "api"},
+    "api": {"canonical", "analytics", "database", "api"},
     "reports": {"canonical", "analytics", "database", "reports"},
 }
 
