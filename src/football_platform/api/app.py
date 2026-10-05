@@ -6,14 +6,18 @@ Run: .venv/bin/uvicorn football_platform.api.app:app --reload
 Docs: http://127.0.0.1:8000/docs
 """
 
+import os
 from collections.abc import Iterator
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated
 from uuid import UUID
 
 import psycopg
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from football_platform.analytics.definitions import ALL_METRICS, PositionGroup
 from football_platform.analytics.scouting import DEFAULT_NEAR_MISS_POINTS
@@ -30,6 +34,22 @@ from football_platform.database.connection import database_url
 
 # Vite dev server. A deployed frontend is served from the same origin.
 DEV_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+# In production (Docker image) the built frontend is served by this app, on the same origin.
+FRONTEND_DIST_ENV = "FRONTEND_DIST"
+
+
+def mount_frontend(app: FastAPI, dist: Path) -> None:
+    """Serve the built single-page app: static assets, and index.html for every non-API route."""
+    index = dist / "index.html"
+    app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")
+    if (dist / "attribution").is_dir():
+        app.mount("/attribution", StaticFiles(directory=dist / "attribution"), name="attribution")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str) -> FileResponse:
+        if path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+        return FileResponse(index)
 
 
 def create_app(db_url: str | None = None) -> FastAPI:
@@ -195,6 +215,9 @@ def create_app(db_url: str | None = None) -> FastAPI:
             metrics.append(repository.player_season_metrics(conn, player_id, season_id))
         return build_comparison(rows, metrics)
 
+    dist = os.environ.get(FRONTEND_DIST_ENV)
+    if dist and (Path(dist) / "index.html").is_file():
+        mount_frontend(app, Path(dist))  # registered last: API routes take precedence
     return app
 
 
