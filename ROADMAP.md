@@ -167,7 +167,9 @@ Objectives:
 
 ## Phase 6 — Player comparison
 
-Status: NOT STARTED
+Status: DONE (2026-10-05)
+
+Result: compare 2–4 players, with a validated "clear difference / within noise" verdict (D019).
 
 Objectives:
 

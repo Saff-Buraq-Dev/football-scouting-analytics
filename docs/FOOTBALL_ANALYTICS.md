@@ -485,3 +485,73 @@ Each position group shows the metrics that matter most for its role. Other metri
 ## Data source
 
 Every profile states "Data: StatsBomb Open Data (2015/16)". Before any public deployment, the official StatsBomb logo from their media pack must be added (User Agreement §1.4). The API serves derived, aggregated metrics only (D004).
+
+---
+
+# Phase 6 — Player comparison
+
+Status: implemented (decision D019).
+
+## Football question
+
+> "Among these 2–4 candidates for a role, how do their profiles differ, and **which differences are large enough to be real rather than noise**?"
+
+A comparison view naturally invites "who is better?". The view must therefore show *where* players differ and how confident we can be. It must not produce a ranking.
+
+## Rules
+
+| Rule | Why |
+|---|---|
+| 2 to 4 player-seasons | beyond 4, a grouped chart becomes unreadable and colours stop being distinguishable |
+| Metrics shown: the position template of the first player's group, plus the templates of the other groups if they differ | the scout chooses the role being evaluated |
+| **Same position group**: percentiles compared directly | same reference population |
+| **Different position groups**: allowed, with a warning. Each percentile stays relative to its own group, so per-90 values are the comparable figures | a winger at the 80th percentile among wingers and a striker at the 80th among strikers are not "equal" |
+| Different leagues | allowed. The population pools the four leagues of the same season, and league strength is not adjusted (stated in the view) |
+| Different minutes | each player shows minutes and reliability; uncertainty is part of the difference test (below) |
+| No radar chart | radar area depends on axis order and exaggerates differences (area grows with the square of the values). Grouped bars on a common 0–100 scale are used instead |
+
+## Is a difference real? (count metrics)
+
+Each count metric has a regressed estimate *r* (Phase 4.1 §4) and, under the same normal–normal model, a **posterior standard deviation**:
+
+```
+sd = √(w × noise_per_90 / exposure)        (per-90 units)
+```
+
+For two players A and B, the difference is called **clear** when
+
+```
+|r_A − r_B| > 1.96 × √(sd_A² + sd_B²)
+```
+
+This is the usual 95 % threshold for a difference between two independent estimates. Otherwise the view says **"within noise"**.
+
+With 3–4 players, the view states, per metric, whether the **leader is clearly ahead of the second** (same test between the top two regressed estimates). This answers the scout's question "is the best one really better on this?" without ranking everybody.
+
+Ratios (pass completion, save %) have no posterior SD in v1. Their differences are shown without a test, and only when both ratios are reliable (minimum attempts, Phase 4.1 §1).
+
+**Validation** (`scripts/validation/phase6_validation.py`): using first-half-season data only, pairs of players in the same position group are classified "clear" or "within noise" for each metric. Then we check how often the sign of the difference holds in the second half. A useful rule must show a much higher persistence for "clear" differences than for "within noise" ones.
+
+**Limitations:** the test assumes the model of Phase 4.1 (position-group prior, no league or team adjustment). It reflects sampling noise only, not differences in team context or role.
+
+## Validation of the difference rule (2026-10-05)
+
+Reproduce: `.venv/bin/python scripts/validation/phase6_validation.py`. 977 players with ≥ 450 minutes in each half-season. All pairs within the same position group. The verdict uses first-half data, and persistence = same sign of the difference in the second half.
+
+| Metric | Pairs | Judged clear | Persists if clear | Persists if within noise |
+|---|---:|---:|---:|---:|
+| npxg | 84,304 | 10 % | **88 %** | 64 % |
+| xa | 84,955 | 9 % | **89 %** | 61 % |
+| key_passes | 84,955 | 16 % | **93 %** | 64 % |
+| progressive_passes | 87,078 | 38 % | **92 %** | 67 % |
+| tackles | 84,663 | 20 % | **91 %** | 67 % |
+| interceptions | 84,565 | 24 % | 73 % | 56 % |
+| np_goals | 59,748 | 2 % | 94 % | 56 % |
+| assists | 58,301 | 1 % | 77 % | 57 % |
+
+**Reading:** a difference flagged "clear" keeps its direction about 9 times out of 10. A "within noise" difference is barely better than a coin toss (50 %). The rule therefore separates real differences from noise.
+
+**Football interpretation:**
+- **Interceptions** persist less (73 %): they depend on match context (opponent, score, team style), which changes between the two halves. Treat interception differences with extra caution.
+- **Goals**: over half a season, only **2 %** of player pairs can be told apart, against 38 % for progressive passes. Goals are a poor criterion for separating two players. Prefer npxG and shot volume.
+- Full-season comparisons have smaller standard deviations than half-seasons, so more pairs are "clear" in the application than in this test.

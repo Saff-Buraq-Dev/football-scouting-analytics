@@ -44,6 +44,7 @@ Consequences:
 | D016 | Player-season metrics v1: definitions, 900-minute threshold, position-group percentiles | Accepted |
 | D017 | Phase 4.1: ratio minimums, goalkeeper metrics, regressed estimates, no possession adjustment | Accepted |
 | D018 | Player profiles: analytics snapshot in PostgreSQL, FastAPI, React + TypeScript | Accepted |
+| D019 | Player comparison: grouped bars, no radar, 95 % difference test on regressed estimates | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -389,3 +390,24 @@ Reason: The database read path makes profiles instant. FastAPI keeps one languag
 Alternatives considered: computing on request (too slow); a materialised SQL view (moves logic into SQL); server-rendered templates or HTMX (simpler, but less suited to the interactive comparison and scouting views of Phases 6–7); a UI framework such as Tailwind or MUI (faster start, weaker design identity).
 
 Consequences: The snapshot must be refreshed (`player_season_report`) after each ingestion or methodology change. Before any public deployment, the official StatsBomb logo must be added to the UI (User Agreement §1.4).
+
+---
+
+### Decision D019 — Player comparison
+
+Date: 2026-10-05
+
+Status: Accepted
+
+Context: Comparing 2–4 players invites "who is better?". Raw gaps between per-90 values ignore sample noise. Two players can differ by 20 % on a metric purely by chance.
+
+Decision:
+- Compare 2–4 player-seasons. Metrics come from the union of the players' position templates. Mixed position groups are allowed with a warning, because percentiles are then relative to different populations.
+- Each count metric carries a posterior standard deviation (migration 0004). A difference is **clear** when |r_A − r_B| > 1.96 × √(sd_A² + sd_B²); otherwise it is **within noise**. With 3–4 players, only the leader is tested against the second. Ratios are not tested.
+- Visualisation: grouped horizontal percentile bars, one categorical colour per player (validated slots 1–4), value printed on every bar, verdict naming the player who is clearly ahead. **No radar chart.**
+
+Reason: The rule is validated on held-out data. Clear differences persist 88–94 % of the time for most metrics, against 56–67 % for differences within noise. Radar charts distort comparisons (area grows with the square of the values, and the shape depends on axis order).
+
+Alternatives considered: radar/pizza charts (popular in football media, misleading); showing raw differences without a test (invites over-interpretation); pairwise tests between all players (6 verdicts per metric for 4 players, unreadable).
+
+Consequences: The verdict reflects sampling noise only, not team context or role. Interception differences are less persistent (73 %), which is documented. Ratios have no difference test in v1.
