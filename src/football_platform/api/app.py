@@ -16,10 +16,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from football_platform.analytics.definitions import ALL_METRICS, PositionGroup
 from football_platform.analytics.scouting import DEFAULT_NEAR_MISS_POINTS
+from football_platform.analytics.similarity import similarity_features
 from football_platform.api import repository
 from football_platform.api.comparison import MAX_PLAYERS, MIN_PLAYERS, build_comparison
 from football_platform.api.scouting import InvalidCriteriaError, build_scouting_result, parse_criteria, presets_payload
 from football_platform.api.profile import DATA_SOURCE, build_profile
+from football_platform.api.similarity import SimilarityUnavailableError, build_similarity
 from football_platform.api.team import LABELS as TEAM_LABELS
 from football_platform.api.team import build_team_profile, team_list_item
 from football_platform.database.connection import database_url
@@ -82,6 +84,23 @@ def create_app(db_url: str | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="No analytics for this player and season")
         metrics = repository.player_season_metrics(conn, str(player_id), str(season_id))
         return build_profile(row, metrics, float(row["min_minutes"]))
+
+    @app.get("/api/players/{player_id}/seasons/{season_id}/similar")
+    def similar_players(
+        conn: Conn, player_id: UUID, season_id: UUID,
+        limit: Annotated[int, Query(ge=1, le=50)] = 10,
+    ) -> dict:
+        row = repository.player_season(conn, str(player_id), str(season_id))
+        if row is None:
+            raise HTTPException(status_code=404, detail="No analytics for this player and season")
+        if not row.get("position_group"):
+            raise HTTPException(status_code=422, detail="Player has no position group")
+        features = similarity_features(PositionGroup(row["position_group"]))
+        rows = repository.similarity_population(conn, row["position_group"], features, str(player_id), str(season_id))
+        try:
+            return build_similarity(rows, features, f"{player_id}:{season_id}", limit)
+        except SimilarityUnavailableError as error:
+            raise HTTPException(status_code=422, detail=str(error)) from None
 
     @app.get("/api/scouting/presets")
     def scouting_presets() -> list[dict]:

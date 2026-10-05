@@ -332,3 +332,7 @@ details.all-metrics .table { margin-top: 10px; }
 }
 .scatter-tip strong { color: var(--text-primary); font-size: 13px; }
 .team-metric { grid-template-columns: minmax(170px, 1.4fr) 1.6fr 64px 40px; }
+
+/* ---- Similar players ---------------------------------------------------- */
+.sim-pct { font-weight: 600; font-variant-numeric: tabular-nums; }
+.button.small { padding: 4px 9px; font-size: 12.5px; }

@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { fetchProfile, type Profile } from "../api";
 import { AllMetricsTable } from "../components/AllMetricsTable";
 import { MetricRow, ScaleLegend } from "../components/MetricRow";
+import { SimilarPlayers } from "../components/SimilarPlayers";
 import { POSITION_GROUP_PLURALS, ROLE_LABELS, formatMinutes, formatShare } from "../format";
 
 export function ProfilePage() {
@@ -108,6 +109,8 @@ export function ProfilePage() {
           </section>
         ))}
       </div>
+
+      <SimilarPlayers playerId={playerId} seasonId={seasonId} />
 
       <AllMetricsTable metrics={profile.all_metrics} />
     </>

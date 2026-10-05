@@ -167,3 +167,23 @@ def team_squad(conn: psycopg.Connection, team_id: str, season_id: str) -> list[d
         FROM player_seasons ps JOIN players p ON p.id = ps.player_id
         WHERE ps.season_id = %s AND %s = ANY(ps.team_ids)
         ORDER BY ps.minutes DESC""", (season_id, team_id))
+
+
+def similarity_population(conn: psycopg.Connection, position_group: str, metric_keys: list[str],
+                          target_player_id: str, target_season_id: str) -> list[dict[str, Any]]:
+    """Eligible players of the group (snapshot population) plus the target, one row per (player, metric)."""
+    return _rows(conn, f"""
+        SELECT ps.player_id, ps.season_id, coalesce(p.known_name, p.name) AS player_name,
+               {TEAM_NAMES} AS teams, c.name AS competition, ps.minutes, ps.eligible,
+               ps.team_possession_pct, m.metric_key, m.regressed
+        FROM player_seasons ps
+        JOIN analytics_runs r ON r.id = ps.analytics_run_id
+        JOIN players p ON p.id = ps.player_id
+        JOIN seasons s ON s.id = ps.season_id
+        JOIN competitions c ON c.id = s.competition_id
+        JOIN player_season_metrics m
+          ON m.player_id = ps.player_id AND m.season_id = ps.season_id AND m.metric_key = ANY(%s)
+        WHERE ps.position_group = %s
+          AND ((ps.eligible AND ps.season_id = ANY(r.population_seasons))
+               OR (ps.player_id = %s AND ps.season_id = %s))""",
+        (metric_keys, position_group, target_player_id, target_season_id))

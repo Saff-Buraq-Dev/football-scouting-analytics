@@ -291,3 +291,29 @@ export function fetchTeams(seasonId: string, signal?: AbortSignal) {
 export function fetchTeamProfile(teamId: string, seasonId: string, signal?: AbortSignal) {
   return getJson<TeamProfile>(`/api/teams/${teamId}/seasons/${seasonId}`, signal);
 }
+
+export interface SimilarPlayer {
+  player_id: string;
+  season_id: string;
+  player_name: string;
+  teams: string[];
+  competition: string;
+  minutes: number;
+  team_possession_pct: number | null;
+  rank: number;
+  similarity_percentile: number;
+  profile_z: number[];
+  main_differences: { key: string; label: string; direction: "more" | "fewer"; z_difference: number }[];
+}
+
+export interface SimilarityResponse {
+  target: { player_id: string; season_id: string; player_name: string; eligible: boolean };
+  features: { key: string; label: string; target_z: number }[];
+  population_size: number;
+  results: SimilarPlayer[];
+  method_note: string;
+}
+
+export function fetchSimilar(playerId: string, seasonId: string, signal?: AbortSignal) {
+  return getJson<SimilarityResponse>(`/api/players/${playerId}/seasons/${seasonId}/similar?limit=10`, signal);
+}

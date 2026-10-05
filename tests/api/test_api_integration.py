@@ -95,3 +95,9 @@ def test_team_endpoints(client):
     assert [p["player_name"] for p in profile["squad"]] == ["Player 1"]
     assert client.get("/api/teams/00000000-0000-0000-0000-000000000000/seasons/"
                       "00000000-0000-0000-0000-000000000000").status_code == 404
+
+
+def test_similar_endpoint_needs_a_population(client):
+    hit = client.get("/api/players", params={"q": "player 1"}).json()["results"][0]
+    response = client.get(f"/api/players/{hit['player_id']}/seasons/{hit['season_id']}/similar")
+    assert response.status_code == 422  # synthetic data: nobody eligible to compare with
