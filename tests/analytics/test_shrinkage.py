@@ -56,3 +56,15 @@ def test_metric_without_any_event_in_the_group_keeps_the_observed_value():
     result = add_regressed_estimates(frame(rows), SEASONS, ["s1"])
     assert (result["np_goals_p90_regressed"] == 0).all()
     assert (result["np_goals_reliability"] == 1).all()
+
+
+def test_posterior_sd_shrinks_with_more_minutes_and_matches_the_formula():
+    rows = [(f"p{i}", 2700, c, True) for i, c in enumerate([5, 10, 15, 20, 25])]
+    rows += [("short", 450, 5, False)]
+    result = add_regressed_estimates(frame(rows), SEASONS, ["s1"]).set_index("player_id")
+    assert result.loc["short", "np_goals_p90_regressed_sd"] > result.loc["p0", "np_goals_p90_regressed_sd"]
+    # sd = sqrt(w * noise / exposure); noise = pooled per-90 rate of squared contributions.
+    pool = result.loc[[f"p{i}" for i in range(5)]]
+    noise = pool["np_goals__sq"].sum() / (pool["minutes"].sum() / 90)
+    w = result.loc["short", "np_goals_reliability"]
+    assert result.loc["short", "np_goals_p90_regressed_sd"] == pytest.approx(np.sqrt(w * noise / 5))

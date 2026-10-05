@@ -17,7 +17,9 @@ PLAYER_SEASON_COLUMNS = [
     "population_size",
 ]
 INTEGER_COLUMNS = {"appearances", "starts", "population_size"}
-METRIC_COLUMNS = ["player_id", "season_id", "metric_key", "total", "value", "percentile", "regressed", "reliability"]
+METRIC_COLUMNS = [
+    "player_id", "season_id", "metric_key", "total", "value", "percentile", "regressed", "reliability", "regressed_sd",
+]
 
 
 def _clean(value: Any) -> Any:
@@ -35,11 +37,12 @@ def metric_row(row: pd.Series, metric: MetricSpec) -> tuple:
         percentile = row[f"{metric.key}_p90_pct"]
         regressed = row.get(f"{metric.key}_p90_regressed")
         reliability = row.get(f"{metric.key}_reliability")
+        regressed_sd = row.get(f"{metric.key}_p90_regressed_sd")
     else:
         total, value = row[metric.numerator], row[metric.key]
-        percentile, regressed, reliability = row[f"{metric.key}_pct"], None, None
+        percentile, regressed, reliability, regressed_sd = row[f"{metric.key}_pct"], None, None, None
     return tuple(_clean(v) for v in (row["player_id"], row["season_id"], metric.key, total, value,
-                                     percentile, regressed, reliability))
+                                     percentile, regressed, reliability, regressed_sd))
 
 
 def store_snapshot(conn: psycopg.Connection, report: pd.DataFrame, min_minutes: float,

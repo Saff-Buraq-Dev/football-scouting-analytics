@@ -2,6 +2,7 @@
 
 regressed = w * observed + (1 - w) * group_mean
 w         = var_true / (var_true + noise_per_90 / exposure)
+sd        = sqrt(w * noise_per_90 / exposure)      posterior standard deviation (Phase 6)
 
 The prior (group mean, var_true, noise) is estimated on the eligible players of
 the reference population and applied to every player of the group.
@@ -41,6 +42,7 @@ def add_regressed_estimates(
     for metric in (m for m in COUNT_METRICS if m.regress):
         regressed = pd.Series(np.nan, index=result.index)
         reliability = pd.Series(np.nan, index=result.index)
+        posterior_sd = pd.Series(np.nan, index=result.index)
         available = result[metric.key].notna()
         for group, members in result[available & result["position_group"].notna()].groupby("position_group"):
             population = members[in_population.loc[members.index]]
@@ -49,14 +51,17 @@ def add_regressed_estimates(
             mean, var_true, noise = group_prior(
                 population[metric.key], population[f"{metric.key}__sq"], exposure.loc[population.index]
             )
+            member_exposure = exposure.loc[members.index]
             if noise == 0:
                 # No event of this kind in the population (e.g. shots by goalkeepers):
                 # nothing to regress, the observed value is kept.
                 w = pd.Series(1.0, index=members.index)
             else:
-                w = var_true / (var_true + noise / exposure.loc[members.index])
+                w = var_true / (var_true + noise / member_exposure)
+            posterior_sd.loc[members.index] = np.sqrt(w * noise / member_exposure)
             reliability.loc[members.index] = w
             regressed.loc[members.index] = w * members[f"{metric.key}_p90"] + (1 - w) * mean
         result[f"{metric.key}_p90_regressed"] = regressed
         result[f"{metric.key}_reliability"] = reliability
+        result[f"{metric.key}_p90_regressed_sd"] = posterior_sd
     return result
