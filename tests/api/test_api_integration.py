@@ -9,7 +9,8 @@ from football_platform.database.migrate import apply_migrations
 from football_platform.pipeline.ingest import run as ingest
 from football_platform.pipeline.load_database import load
 from football_platform.reports.player_season_report import build_report
-from football_platform.reports.snapshot import store_snapshot
+from football_platform.reports.snapshot import store_snapshot, store_team_snapshot
+from football_platform.reports.team_season_report import compute_teams, load_team_inputs
 from tests.providers.statsbomb.factories import write_synthetic_raw_store
 
 pytestmark = pytest.mark.db
@@ -27,6 +28,8 @@ def client(test_database_url, tmp_path_factory):
         load(tmp / "canonical" / COMMIT[:12], conn)
         report = build_report(conn, 900.0)
         store_snapshot(conn, report, 900.0, list(report["season_id"].unique()), "statsbomb_open")
+        teams = compute_teams(load_team_inputs(conn))
+        store_team_snapshot(conn, teams)
     return TestClient(create_app(test_database_url))
 
 
@@ -81,3 +84,14 @@ def test_scouting_endpoint_validates_criteria(client):
     assert ok.status_code == 200 and ok.json()["population_size"] == 0  # synthetic data: nobody eligible
     bad = client.get("/api/scouting", params={"position_group": "striker", "criterion": ["gk_claims:50"]})
     assert bad.status_code == 422
+
+
+def test_team_endpoints(client):
+    teams = client.get("/api/teams").json()["teams"]
+    assert {t["team_name"] for t in teams} == {"Home FC", "Away FC"}
+    home = next(t for t in teams if t["team_name"] == "Home FC")
+    assert home["points"] == 3
+    profile = client.get(f"/api/teams/{home['team_id']}/seasons/{home['season_id']}").json()
+    assert [p["player_name"] for p in profile["squad"]] == ["Player 1"]
+    assert client.get("/api/teams/00000000-0000-0000-0000-000000000000/seasons/"
+                      "00000000-0000-0000-0000-000000000000").status_code == 404

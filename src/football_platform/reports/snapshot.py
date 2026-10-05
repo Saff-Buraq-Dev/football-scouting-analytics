@@ -69,3 +69,22 @@ def store_snapshot(conn: psycopg.Connection, report: pd.DataFrame, min_minutes: 
                 for metric in ALL_METRICS:
                     copy.write_row(metric_row(row, metric))
     return run_id
+
+
+def store_team_snapshot(conn: psycopg.Connection, report: pd.DataFrame) -> int:
+    """Replace the team-season snapshot (Phase 8). Returns the number of team-seasons stored."""
+    from football_platform.analytics.team import TEAM_METRICS
+
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM team_seasons")  # cascades to team_season_metrics
+        columns = ["team_id", "season_id", "matches", "points", "goals_for", "goals_against", "league_size"]
+        with cur.copy(f"COPY team_seasons ({', '.join(columns)}) FROM STDIN") as copy:
+            for _, row in report.iterrows():
+                values = [_clean(row[c]) for c in columns]
+                copy.write_row([values[0], values[1]] + [None if v is None else int(v) for v in values[2:]])
+        with cur.copy("COPY team_season_metrics (team_id, season_id, metric_key, value, percentile) FROM STDIN") as copy:
+            for _, row in report.iterrows():
+                for metric in TEAM_METRICS:
+                    copy.write_row((row["team_id"], row["season_id"], metric.key,
+                                    _clean(row[metric.key]), _clean(row[f"{metric.key}_pct"])))
+    return len(report)
