@@ -14,7 +14,10 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-REPO = "statsbomb/open-data"
+REPO = "hudl/open-data"  # formerly statsbomb/open-data (GitHub redirects the old name)
+# The release audited in docs/data/STATSBOMB_COVERAGE.md. coverage_review.json is valid for
+# this commit, so a fresh install pins it rather than whatever is newest (use --refresh to move).
+AUDITED_COMMIT = "4b73468fc5b0f1950f9f66fada70ad3a4f9327cb"
 MAX_ATTEMPTS = 4
 RETRY_DELAY_S = 2.0
 DEFAULT_WORKERS = 8
@@ -36,11 +39,17 @@ def _http_get(url: str) -> bytes:
 
 
 def resolve_commit(raw_root: Path, refresh: bool = False) -> str:
-    """Return the pinned commit, pinning the current master HEAD on first use."""
+    """Return the pinned commit: the existing pin, else the audited release.
+
+    refresh=True pins the current master HEAD instead; the coverage review must then be redone.
+    """
     pin_file = raw_root / "PINNED_COMMIT"
     if pin_file.exists() and not refresh:
         return pin_file.read_text().strip()
-    sha = json.loads(_http_get(f"https://api.github.com/repos/{REPO}/commits/master"))["sha"]
+    if refresh:
+        sha = json.loads(_http_get(f"https://api.github.com/repos/{REPO}/commits/master"))["sha"]
+    else:
+        sha = AUDITED_COMMIT
     raw_root.mkdir(parents=True, exist_ok=True)
     pin_file.write_text(sha + "\n")
     logger.info("Pinned StatsBomb open data at commit %s", sha)
