@@ -1,0 +1,13 @@
+# Provider data is never committed (docs/DECISIONS.md D004)
+/data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.DS_Store
