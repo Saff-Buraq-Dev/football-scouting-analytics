@@ -195,7 +195,9 @@ Objectives:
 
 ## Phase 8 — Team analysis
 
-Status: NOT STARTED
+Status: DONE (2026-10-05)
+
+Result: results vs underlying performance (exact xPts), playing-style metrics, style and quality maps, team profiles with squads. Predictive value and league effects validated (D021).
 
 Objectives:
 

@@ -46,6 +46,7 @@ Consequences:
 | D018 | Player profiles: analytics snapshot in PostgreSQL, FastAPI, React + TypeScript | Accepted |
 | D019 | Player comparison: grouped bars, no radar, 95 % difference test on regressed estimates | Accepted |
 | D020 | Scouting: threshold screening, Pareto tiers, maximin, near misses, no weighted score | Accepted |
+| D021 | Team analysis: exact xPts, PPDA, style shares, within-league percentiles | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -435,3 +436,26 @@ Reason: Filters and dominance are transparent and weight-free, and every orderin
 Alternatives considered: weighted composite score (arbitrary weights); screening on regressed estimates (tested, no gain); similarity search "players like X" (planned for Phase 9).
 
 Consequences: Two tier-1 candidates are not ordered against each other by the method, and that choice is left to the scout. Shortlists must be presented as a starting point, which the UI states.
+
+---
+
+### Decision D021 — Team analysis
+
+Date: 2026-10-05
+
+Status: Accepted
+
+Context: Phase 8 must say whether teams deserved their results and how they played, comparably across teams.
+
+Decision:
+- Team-season metrics from canonical events, as ratios of season totals: points, goal difference, npxG for/against/difference, **expected points**, possession, PPDA, long and progressive pass shares, crosses, counter-attack and set-piece npxG shares, npxG per shot for and against.
+- **xPts are computed exactly** (Poisson-binomial convolution of every shot's xG), not by simulation. This is deterministic and testable.
+- **Percentiles within each league-season**, not pooled. Validation showed league norms (e.g. PPDA, set-piece shares) differ enough that pooling mixes league and style.
+- Snapshot tables `team_seasons` and `team_season_metrics` (migration 0005), API `/api/teams` and `/api/teams/{id}/seasons/{id}`, and a Teams page with a style map (possession × pressing) and a quality map (npxG for × against).
+- Counter-attack and set-piece shares rely on StatsBomb possession origins and are capability-gated.
+
+Reason: npxG difference and xPts predicted second-half points better than first-half points or goal difference (r 0.70 vs 0.62). Within-league percentiles remove a demonstrated league effect.
+
+Alternatives considered: simulated xPts (non-deterministic); pooled percentiles (league bias); PPDA without fouls (deviates from the public definition, which would make results harder to compare with other sources).
+
+Consequences: Teams from different leagues are compared on values, not percentiles. xPts ignore game state and treat rebound shots as independent.

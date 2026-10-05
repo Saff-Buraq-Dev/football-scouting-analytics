@@ -632,3 +632,84 @@ Reproduce: `cd scripts/validation && ../../.venv/bin/python phase7_validation.py
 4. **Screening on regressed estimates did not help.** Same shortlists and outcomes: among players above 900 minutes, regression barely changes the order. So observed percentiles are kept, for transparency.
 
 **Consequence for use:** a shortlist is a starting point for video and live scouting, not a decision. The interface states this next to the results.
+
+---
+
+# Phase 8 — Team analysis
+
+Status: implemented (decision D021).
+
+## Football questions
+
+1. **Did the team get the results its performances deserved?** Points against expected points; goal difference against non-penalty xG difference.
+2. **How does it play?** Possession, pressing intensity, directness, counter-attacking, set-piece reliance, chance quality.
+3. **How does it compare?** Every team-season against the other 80 of the D011 slice.
+
+Unit: team × competition-season, from canonical events (shoot-outs excluded). Season values are **ratios of season totals**, not averages of match ratios, so long and short matches are weighted correctly.
+
+## Results versus performance
+
+| Metric | Definition | Limitations |
+|---|---|---|
+| `points_per_match` | 3 win / 1 draw / 0 loss | |
+| `goal_diff_per_match` | (goals for − goals against) / matches, own goals included | |
+| `npxg_for`, `npxg_against` (per match) | StatsBomb xG of non-penalty shots | provider model (D007); capability-gated |
+| `npxg_diff_per_match` | npxG for − npxG against | |
+| `xpts_per_match` | expected points (below) | |
+
+**Expected points (xPts).** Each shot is treated as an independent chance to score with probability = its xG (penalties included). A team's goal count then follows a Poisson-binomial distribution, computed exactly by convolution over its shots. From both teams' distributions:
+
+```
+P(win)  = Σ_{i>j} P_team(i) · P_opp(j)
+P(draw) = Σ_i     P_team(i) · P_opp(i)
+xPts    = 3 · P(win) + P(draw)
+```
+
+Limitations: shots in the same attack (rebounds) are not independent, so variance is overstated for rebound sequences. Own goals carry no xG and are ignored. Game state is not modelled (a team leading 2–0 may shoot less).
+
+## Style
+
+| Metric | Definition | Football reading | Limitations |
+|---|---|---|---|
+| `possession_pct` | share of passes attempted (D017 proxy) | how much the team has the ball | pass share, not time |
+| `ppda` | opponent passes in their own 60 % of the pitch ÷ own defensive actions (tackles, interceptions, fouls committed) in the opponent's 60 % | **passes allowed per defensive action**: lower = more intense, higher pressing | standard public definition (Trainor); depends on what counts as a defensive action per provider |
+| `long_pass_share` | passes ≥ 40 m / passes attempted | directness of build-up | length on the standard pitch (D005) |
+| `progressive_pass_share` | progressive passes / completed open-play passes | how often a pass moves the ball significantly forward | Wyscout-style definition (Phase 4) |
+| `crosses_per_match` | open-play crosses attempted per match | wide, crossing play | |
+| `counter_npxg_share` | share of npxG from possessions starting as counter-attacks | reliance on transitions | **StatsBomb play pattern** ("From Counter"): capability-gated (`has_possession_ids`) |
+| `set_piece_npxg_share` | share of npxG from possessions starting from corners or free kicks (throw-ins excluded, see validation) | reliance on set pieces | StatsBomb possession origin; free-kick possessions include restarts that turn into open play |
+| `npxg_per_shot_for`, `npxg_per_shot_against` | npxG / non-penalty shots | chance quality created / conceded | |
+
+Percentiles: each team-season **within its own league-season** (20 teams). Pooling the four leagues was rejected after validation (league norms differ, see below). Like player percentiles, they are **descriptive**: a high PPDA is not "bad", it describes a deeper defensive block.
+
+## Validation
+
+1. **Do underlying numbers predict the future better than results?** Using the first half of each season, correlate {points, goal difference, npxG difference, xPts} per match with points per match in the second half. If npxG difference predicts better than past points or goal difference, team analysis should lead with it.
+2. **Face validity of styles**: 2015/16 is well documented (e.g. Leicester's low-possession counter-attacking title, Barcelona's possession, pressing sides).
+
+## Validation of team metrics (2026-10-05)
+
+Reproduce: `cd scripts/validation && ../../.venv/bin/python phase8_validation.py`.
+
+### Predicting second-half points (80 team-seasons, first-half measures)
+
+| First-half measure | r with second-half points per match | R² |
+|---|---:|---:|
+| Points per match | 0.62 | 0.39 |
+| Goal difference per match | 0.65 | 0.43 |
+| Expected points per match | 0.70 | 0.48 |
+| npxG difference per match | **0.70** | **0.49** |
+
+Underlying performance (npxG difference, xPts) predicts future results better than past points or goal difference. This reproduces the classic analytics finding, but with 80 teams the margin is modest (R² 0.49 vs 0.39). The team view therefore leads with points *and* expected points, never one alone.
+
+### Corrections made during validation
+
+1. **Set pieces**: counting throw-in possessions gave implausible shares (up to 65 % of npxG). Throw-ins were removed. Shares are now 25–49 %, and the most set-piece reliant include Pulis's West Bromwich Albion.
+2. **League effect on PPDA**: mean PPDA was 13.0 in La Liga against 15.5 in the Premier League and Ligue 1 (La Liga also has more fouls per match, and fouls count as defensive actions). With pooled percentiles, the five "most intense pressing" teams were all Spanish. **Percentiles are now computed within each league.** Within-league pressing leaders are Manchester United, Liverpool and Tottenham (Premier League), Celta Vigo, Barcelona and Rayo Vallecano (La Liga), and PSG and Lyon (Ligue 1).
+
+### Face validity (2015/16)
+
+- Possession: Barcelona, PSG and Napoli are highest.
+- Counter-attack reliance: Leicester City is in the top 5.
+- Points above expected: Atlético Madrid, Real Madrid and Leicester City (+14.8 points over the season). Below expected: Toulouse, Aston Villa and Hellas Verona.
+- Leicester City: 81 points (the official total). Possession at the 15th percentile of the league, long passes at the 90th, counter-attack share at the 95th, chance quality per shot at the 100th. This is the documented profile of that title season.
