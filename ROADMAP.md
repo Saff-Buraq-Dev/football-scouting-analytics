@@ -240,6 +240,8 @@ No purchase without a concrete use case.
 
 ## Phase 10 — Portfolio / production
 
+Progress (2026-10-05): StatsBomb logo attribution on every page, MIT license for the code, CI (backend with PostgreSQL + frontend), recruiter-oriented README with screenshots. Remaining: public demo deployment, write-up of findings.
+
 Objectives:
 
 - improve UX;
