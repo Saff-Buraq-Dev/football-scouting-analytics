@@ -240,7 +240,7 @@ No purchase without a concrete use case.
 
 ## Phase 10 — Portfolio / production
 
-Progress (2026-10-05): StatsBomb logo attribution on every page, MIT license for the code, CI (backend with PostgreSQL + frontend), recruiter-oriented README with screenshots. Remaining: public demo deployment, write-up of findings.
+Progress (2026-10-05): StatsBomb logo attribution on every page, MIT license for the code, CI (backend with PostgreSQL + frontend), recruiter-oriented README with screenshots. Deployment-ready for self-hosted Portainer (D024): image published by CI, one-shot data bootstrap, stack file and guide (deploy/README.md). Fresh install verified end to end. Remaining: go live on the developer's server, write-up of findings.
 
 Objectives:
 

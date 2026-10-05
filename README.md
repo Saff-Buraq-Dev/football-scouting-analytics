@@ -18,7 +18,7 @@ Most football dashboards show numbers. This project checks whether the numbers m
 | Can scouting avoid arbitrary weighted scores? | Shortlists are sound (players stay at the 70th–86th percentile) but hard thresholds are brittle | Pareto tiers instead of a score, plus a "near misses" list |
 | Which similarity measure recognises a player? | Fingerprint test across half-seasons: Euclidean on regressed profiles **25× better than chance**; Mahalanobis worse | Similarity percentile ("closer than 97 % of the group"), never a made-up "% similar" |
 
-Every decision is recorded in [docs/DECISIONS.md](docs/DECISIONS.md) (D001–D023), and every metric is defined in [docs/FOOTBALL_ANALYTICS.md](docs/FOOTBALL_ANALYTICS.md).
+Every decision is recorded in [docs/DECISIONS.md](docs/DECISIONS.md) (D001–D024), and every metric is defined in [docs/FOOTBALL_ANALYTICS.md](docs/FOOTBALL_ANALYTICS.md).
 
 ## Screenshots
 
@@ -81,6 +81,10 @@ cd frontend && npm install && npm run dev                               # http:/
 
 Tests: `.venv/bin/pytest` (database tests run when PostgreSQL is reachable) and `cd frontend && npm test`.
 
+## Deploy (Docker / Portainer)
+
+One image (`ghcr.io/saff-buraq-dev/football-scouting-analytics`, code only) runs the web app and a one-shot bootstrap that downloads the data on your host. See [deploy/README.md](deploy/README.md) and [deploy/portainer-stack.yml](deploy/portainer-stack.yml).
+
 ## Data and licensing
 
 - **No football data is stored in this repository.** The pipeline downloads StatsBomb Open Data, pinned to a specific commit.
@@ -96,4 +100,4 @@ Tests: `.venv/bin/pytest` (database tests run when PostgreSQL is reachable) and 
 | [docs/DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md) | evaluation of free and commercial data providers |
 | [docs/data/](docs/data/) | coverage audit, data dictionary, StatsBomb mapping specification |
 | [docs/FOOTBALL_ANALYTICS.md](docs/FOOTBALL_ANALYTICS.md) | metric definitions, methods, validation results |
-| [docs/DECISIONS.md](docs/DECISIONS.md) | decision log |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | decision log (D001–D024) |

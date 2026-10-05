@@ -272,7 +272,8 @@ src/football_platform/
   analytics/        # Phase 4: player-match counts, player-season per 90, percentiles (pandas)
   reports/          # Phase 4: database -> analytics -> report files + analytics snapshot (D018)
   api/              # Phase 5-8: FastAPI, read-only, aggregated data only (players, comparison, scouting, teams)
-frontend/           # Phase 5: React + TypeScript (Vite)
+frontend/           # Phase 5: React + TypeScript (Vite); built into the Docker image and served by the API
+deploy/             # Phase 10: Portainer stack, bootstrap script, deployment guide (D024)
 scripts/
   discovery/        # Phase 1B exploration scripts (stdlib only, not application code)
 tests/

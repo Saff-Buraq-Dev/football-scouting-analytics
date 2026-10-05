@@ -49,6 +49,7 @@ Consequences:
 | D021 | Team analysis: exact xPts, PPDA, style shares, within-league percentiles | Accepted |
 | D022 | Player similarity: regressed z-scores, Euclidean distance chosen by fingerprint test | Accepted |
 | D023 | Shot maps as zone aggregates, never individual shots through the API | Accepted |
+| D024 | Self-hosted deployment: one code-only image, data bootstrapped on the host | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -501,3 +502,25 @@ Reason: Licence compliance, and robustness: zone shares and xG per shot are hard
 Alternatives considered: individual shot dots through the API (event-level data, D004); hexbin grids (finer, but sparse per player and harder to read); individual-shot static images (possible later for local publication with attribution).
 
 Consequences: Within-zone detail (exact angle, distance) is not shown. Penalties are reported separately.
+
+---
+
+### Decision D024 — Self-hosted deployment
+
+Date: 2026-10-05
+
+Status: Accepted (hosting chosen by the developer: self-hosted Portainer)
+
+Context: The portfolio needs a live demo. The full database is about 3.4 GB, and StatsBomb data must not be redistributed (D004), so it cannot be baked into a public image.
+
+Decision:
+- **One Docker image** containing code only: the FastAPI app also serves the built frontend (same origin, no extra web server), and the same image runs the data bootstrap. It is multi-arch (amd64 and arm64) and published to GHCR by CI after all tests pass.
+- **Bootstrap service** (`deploy/bootstrap.sh`): on first start it downloads StatsBomb Open Data on the host, loads PostgreSQL and computes both analytics snapshots, then deletes raw files. It is idempotent.
+- **A fresh install pins the audited release** (commit `4b73468`), not the newest data, because the coverage review (D010) is only valid for that release.
+- **Portainer stack** (`deploy/portainer-stack.yml`): PostgreSQL without a published port, the bootstrap, and the app. Operations guide: `deploy/README.md`.
+
+Reason: Licence-compliant (data never leaves the host in raw form and is never stored in an image), reproducible (verified: a fresh stack install gives identical results), and simple: one image and three services.
+
+Alternatives considered: shipping a database dump (redistribution); a slim demo database built elsewhere (still redistribution of event data); a separate Nginx container for the frontend (an extra service for no benefit).
+
+Consequences: The first start takes about 15 minutes and needs about 4 GB RAM (measured peak 3.4 GB). New GHCR packages are private by default: the developer must make the package public or give Portainer a token.
