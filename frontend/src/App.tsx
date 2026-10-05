@@ -1,4 +1,5 @@
 import { Link, Route, Routes } from "react-router-dom";
+import { DataAttribution } from "./components/DataAttribution";
 import { ComparePage } from "./pages/ComparePage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ScoutingPage } from "./pages/ScoutingPage";
@@ -43,7 +44,7 @@ export function App() {
         </Routes>
       </main>
       <footer className="footer">
-        <span>Data: StatsBomb Open Data. Derived, aggregated metrics only.</span>
+        <DataAttribution />
         <span>Methodology: docs/FOOTBALL_ANALYTICS.md</span>
       </footer>
     </div>

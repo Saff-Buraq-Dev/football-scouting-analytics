@@ -348,3 +348,13 @@ details.all-metrics .table { margin-top: 10px; }
 .shotmap .zone-sub { font-size: 11px; font-weight: 500; fill: var(--text-secondary); }
 .table.compact th, .table.compact td { padding: 6px 8px; font-size: 12.5px; }
 @media (max-width: 760px) { .shotmap-body { grid-template-columns: 1fr; } }
+
+/* ---- Data attribution (StatsBomb User Agreement §1.4) -------------------- */
+.attribution { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-muted); }
+.attribution:hover { color: var(--text-secondary); }
+.attribution-logo { display: inline-flex; align-items: center; padding: 3px 6px; border-radius: 6px; }
+.attribution-logo img { height: 18px; width: auto; display: block; }
+/* The published logo is the light-background version: give it a light badge in dark mode rather than recolouring it. */
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .attribution-logo { background: #ffffff; }
+}
