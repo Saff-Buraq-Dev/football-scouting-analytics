@@ -839,3 +839,76 @@ Reproduce: `.venv/bin/python scripts/validation/phase9_shot_zones_validation.py`
 - **Anomaly:** wide shots outside the box convert at 8.6 % against 0.8 % expected. This is a tiny sample (175 shots), plausibly crosses that ended in the net, so no conclusion is drawn.
 
 **Face validity:** Vardy takes 27 % of his shots from the wide part of the box (strikers: 19 %), consistent with his runs into the channels. Messi takes 43 % from the central box (attacking midfielders and wingers: 29 %). Goal totals match the record: Vardy 19 non-penalty goals + 5 penalties = 24, Messi 23 + 3 = 26.
+
+---
+
+# Phase 11.1 — Expected Threat (xT)
+
+Status: implemented (decision D025).
+
+## Football question
+
+> "Who moves the ball into dangerous areas, even when no shot follows?"
+
+Assists and key passes credit only the last action before a shot. A midfielder who breaks lines with the pass *before* the key pass, or carries the ball 30 m into the box, gets no credit. **Expected Threat** values every pass and carry by how much it increases the probability that the team scores soon.
+
+## Method (Karun Singh, 2018, public)
+
+The pitch is divided into a **16 × 12 grid** (cells of 6.6 × 5.7 m on the canonical pitch). Each cell *z* has a threat value:
+
+```
+xT(z) = s(z) · g(z)  +  m(z) · Σ_z' T(z → z') · xT(z')
+```
+
+| Term | Meaning | Estimated from |
+|---|---|---|
+| s(z) | probability that the player in *z* shoots | open-play shots / (shots + moves) in *z* |
+| g(z) | probability that a shot from *z* is a goal | **mean StatsBomb xG** of open-play shots from *z* (smoother than goal counts in sparse cells; StatsBomb xG was shown to be well calibrated in Phase 9b) |
+| m(z) | probability that the player moves the ball instead | moves / (shots + moves) in *z* |
+| T(z → z') | probability that a move from *z* successfully reaches *z'* | successful moves *z → z'* / all moves from *z*. Failed moves end the possession and carry no value |
+
+The equation is solved by iteration from xT = 0 until the largest change is below 10⁻⁶ (value iteration).
+
+**Value of an action:** for a *successful* open-play pass or carry, `xT(end cell) − xT(start cell)`. A backward pass is therefore negative. Failed passes are valued 0 in v1 (the original formulation), which is a known limitation (see below).
+
+**Player metrics:** `xt_pass` and `xt_carry` (season sums of net xT added, per 90 in profiles), regressed like other counts (Phase 4.1).
+
+## Scope and choices
+
+- **Open play only:** actions with a set piece (corner, free kick, throw-in, goal kick, kick-off) are excluded from both the model and the valuation. Set pieces are analysed separately (Phase 11.6).
+- **Carries** are capability-gated (`has_carries`). With a provider without carries, xT is computed from passes only, and `xt_carry` is unavailable.
+- The model is fitted on all complete seasons of the population. The predictive validation below fits it on first-half data only.
+
+## Limitations
+
+- **Failed actions are not penalised**: a player who attempts many risky passes and loses the ball is not charged for it in v1.
+- **Location-only:** xT ignores defensive pressure, game state and the identity of the receiver.
+- **Grid resolution:** 16 × 12 cells is the standard compromise. Finer grids are sparse, coarser ones blur the box.
+- **Model output:** xT depends on the StatsBomb xG used for g(z), so it is valid within StatsBomb data (D007).
+
+## Validation
+
+1. **Sanity:** xT must rise towards the opponent's goal and be roughly symmetric left/right.
+2. **Predictive value:** fitted on first-half data only, players' first-half xT per 90 should predict their second-half **npxG + xA per 90** (their direct goal threat) at least as well as first-half key passes do. Otherwise xT adds noise, not information.
+
+### Results (2026-10-08)
+
+Reproduce: `cd scripts/validation && ../../.venv/bin/python phase11_xt_validation.py`.
+
+**1. Surface:** fitted on 2,462,944 open-play actions (52 iterations). Mean threat rises from 0.003 near the own goal to 0.075 in the last column, with a maximum of 0.276 in front of goal (consistent with six-yard-box xG). Left/right asymmetry: 0.0005.
+
+**2. Pre-registered criterion: FAILED.** First-half xT per 90 correlates only r = 0.29 with second-half npxG + xA per 90 (key passes 0.54, xA 0.57), and adds nothing beyond first-half npxG + xA (R² 0.688 → 0.689). Interpretation: xT measures **ball progression, whose value is mostly realised by teammates**. A deep playmaker moves the ball into dangerous zones but rarely shoots or plays the final pass. The criterion tested xT against the wrong outcome, and the failure is kept on record rather than replaced silently.
+
+**3. What xT claims to measure: VALIDATED.**
+
+| Test | Result |
+|---|---|
+| Player stability, first half → second half per 90 | **r = 0.80** (progressive passes 0.82, key passes 0.81): a repeatable player trait |
+| Team xT vs team npxG, same matches (80 team-seasons) | **r = 0.91**: progression measured by xT turns into chances |
+| Team first-half xT → second-half npxG | r = 0.72 (first-half npxG itself: 0.75; adding xT: R² +0.011) |
+
+**Conclusion:** xT is used and presented as a **measure of contribution to ball progression and chance creation upstream of the shot**, not as a predictor of a player's own goals and assists.
+
+**Effect on similarity (Phase 9a):** adding xT to the templates slightly improves the fingerprint test (Euclidean regressed: top-5 34.0 % → 35.9 %, top-10 % 59.6 % → 62.6 %).
+
+**Face validity** (2015/16, ≥ 900 min): xT from passes, central midfielders: James Rodríguez, Barrada, Pastore, Fàbregas, Milner. xT from carries, attacking midfielders and wingers: Neymar, Keita Baldé, Mertens, Messi. Full-backs: Alex Sandro, Carvajal, Maicon, Dani Alves, Mendy. Centre-backs: Mascherano, Maksimović, Juan Jesus, Blind.

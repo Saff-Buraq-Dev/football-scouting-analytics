@@ -50,6 +50,7 @@ Consequences:
 | D022 | Player similarity: regressed z-scores, Euclidean distance chosen by fingerprint test | Accepted |
 | D023 | Shot maps as zone aggregates, never individual shots through the API | Accepted |
 | D024 | Self-hosted deployment: one code-only image, data bootstrapped on the host | Accepted |
+| D025 | Expected Threat (xT) as a progression metric | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -524,3 +525,21 @@ Reason: Licence-compliant (data never leaves the host in raw form and is never s
 Alternatives considered: shipping a database dump (redistribution); a slim demo database built elsewhere (still redistribution of event data); a separate Nginx container for the frontend (an extra service for no benefit).
 
 Consequences: The first start takes about 15 minutes and needs about 4 GB RAM (measured peak 3.4 GB). Publishing needs the `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets; without them CI skips publishing with a warning.
+
+---
+
+### Decision D025 — Expected Threat (xT) as a progression metric
+
+Date: 2026-10-08
+
+Status: Accepted
+
+Context: Assists and key passes ignore actions before the final pass. Clubs value players who progress the ball into dangerous zones.
+
+Decision: Implement Karun Singh's xT on a 16 × 12 grid, fitted by value iteration on open-play actions, with g(z) taken from mean StatsBomb xG. Value successful open-play passes and carries as xT(end) − xT(start). Add `xt_pass` and `xt_carry` (regressed) to player metrics and to the creation/progression themes of position templates, which also feeds similarity. A shared `pitch_grid` module is introduced for the zone maps that follow.
+
+Reason: Public, explainable method. Validation shows xT is a stable player trait (r = 0.80 between half-seasons) and strongly tied to team chance creation (r = 0.91 with team npxG).
+
+Alternatives considered: possession-value models with machine learning (VAEP, OBV-like): less transparent and need more data; penalising failed actions (v2 candidate).
+
+Consequences: The pre-registered criterion (predicting a player's own npxG + xA) failed and is documented. xT is presented as a progression metric only. Failed actions are not penalised in v1.

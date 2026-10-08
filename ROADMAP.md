@@ -238,6 +238,24 @@ No purchase without a concrete use case.
 
 ---
 
+## Phase 11 — Feature expansion
+
+Status: IN PROGRESS (started 2026-10-08)
+
+Order chosen by dependencies. Each feature goes through analysis, tests, validation, documentation and a commit before the next starts.
+
+1. Expected Threat (xT): value of every pass and carry; pitch grid shared with steps 2–3
+2. Pass and touch zone maps (player, zone aggregates)
+3. Pressing maps (team, where the ball is won back)
+4. Match pages (xG race, shot zones, team styles in the match)
+5. Passing networks (per team per match, on match pages)
+6. Set-piece analysis (corner delivery zones and outcomes)
+7. Player archetypes (clustering within position groups, stability-validated)
+8. One-page scouting report (PDF)
+9. Recruitment board (shortlists, tags, notes) behind an abstract authentication provider (development provider now, AWS Cognito later)
+
+---
+
 ## Phase 10 — Portfolio / production
 
 Progress (2026-10-05): StatsBomb logo attribution on every page, MIT license for the code, CI (backend with PostgreSQL + frontend), recruiter-oriented README with screenshots. Deployment-ready for self-hosted Portainer (D024): image published by CI, one-shot data bootstrap, stack file and guide (deploy/README.md). Fresh install verified end to end. Remaining: go live on the developer's server, write-up of findings.
