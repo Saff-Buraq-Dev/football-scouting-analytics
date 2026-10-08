@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { fetchTeamProfile, fetchTeamShots, type ShotZonesView, type TeamMetricRow, type TeamProfile } from "../api";
+import { PressingMaps } from "../components/PressingMaps";
 import { ShotZoneMap } from "../components/ShotZoneMap";
 import { ROLE_LABELS, formatMinutes, formatPercentile, formatTeamValue } from "../format";
 
@@ -82,6 +83,8 @@ export function TeamProfilePage() {
           {profile.style.map((row) => <TeamMetric key={row.key} row={row} />)}
         </section>
       </div>
+
+      <PressingMaps teamId={teamId} seasonId={seasonId} />
 
       {shots && (
         <div className="themes" style={{ marginTop: 18 }}>

@@ -362,3 +362,12 @@ export interface ZoneMapsResponse {
 export function fetchPlayerZones(playerId: string, seasonId: string, signal?: AbortSignal) {
   return getJson<ZoneMapsResponse>(`/api/players/${playerId}/seasons/${seasonId}/zones`, signal);
 }
+
+export interface PressingMapsResponse {
+  layout: ZoneMapsResponse["layout"];
+  maps: { key: "defensive_actions" | "ball_wins"; description: string; total: number; zones: ZoneCell[] }[];
+}
+
+export function fetchTeamPressing(teamId: string, seasonId: string, signal?: AbortSignal) {
+  return getJson<PressingMapsResponse>(`/api/teams/${teamId}/seasons/${seasonId}/pressing`, signal);
+}
