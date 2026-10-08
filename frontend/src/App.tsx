@@ -5,6 +5,7 @@ import { ComparePage } from "./pages/ComparePage";
 import { MatchPage } from "./pages/MatchPage";
 import { MatchesPage } from "./pages/MatchesPage";
 import { ProfilePage } from "./pages/ProfilePage";
+import { ReportPage } from "./pages/ReportPage";
 import { ScoutingPage } from "./pages/ScoutingPage";
 import { TeamProfilePage } from "./pages/TeamProfilePage";
 import { TeamsPage } from "./pages/TeamsPage";
@@ -42,6 +43,7 @@ export function App() {
         <Routes>
           <Route path="/" element={<SearchPage />} />
           <Route path="/players/:playerId/seasons/:seasonId" element={<ProfilePage />} />
+          <Route path="/players/:playerId/seasons/:seasonId/report" element={<ReportPage />} />
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/scouting" element={<ScoutingPage />} />
           <Route path="/archetypes" element={<ArchetypesPage />} />

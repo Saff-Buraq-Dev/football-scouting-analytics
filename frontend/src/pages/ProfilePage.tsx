@@ -37,9 +37,12 @@ export function ProfilePage() {
     <>
       <div className="profile-actions">
         <Link className="back" to="/">← Search</Link>
-        <Link className="button" to={`/compare?ps=${playerId}:${seasonId}`}>
-          Compare with other players
-        </Link>
+        <span className="report-actions">
+          <Link className="button" to={`/players/${playerId}/seasons/${seasonId}/report`}>One-page report (PDF)</Link>
+          <Link className="button" to={`/compare?ps=${playerId}:${seasonId}`}>
+            Compare with other players
+          </Link>
+        </span>
       </div>
 
       <section className="card">

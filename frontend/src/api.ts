@@ -29,6 +29,17 @@ export interface DataSource {
   notice: string;
 }
 
+/** Highest / lowest percentiles among trusted template metrics (api/report.py, D031). */
+export interface HighlightMetric { key: string; label: string; percentile: number; reliability_band: ReliabilityBand }
+
+export interface ReportHighlights {
+  split: boolean;
+  highest: HighlightMetric[];
+  lowest: HighlightMetric[];
+  ranked: HighlightMetric[];
+  low_reliability: string[];
+}
+
 export interface Profile {
   player: { id: string; name: string; nationality: string | null };
   season: { id: string; label: string; competition: string };
@@ -46,6 +57,7 @@ export interface Profile {
   context: { team_possession_pct: number | null };
   population: { position_group: string | null; size: number | null; seasons: string[]; min_minutes: number };
   themes: Theme[];
+  highlights: ReportHighlights;
   all_metrics: MetricView[];
   data_source: DataSource;
 }
