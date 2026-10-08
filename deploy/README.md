@@ -35,6 +35,7 @@ The image contains code only. Football data is downloaded directly from StatsBom
    - `POSTGRES_PASSWORD`: required, **letters and digits only** (it is embedded in a connection URL)
    - `APP_PORT`: optional, default `8080`
    - `IMAGE_TAG`: optional, default `latest` (use a commit SHA to pin a version)
+   - `AUTH_PROVIDER` and `OIDC_*`: optional, for the recruitment board (see [Login](#login-recruitment-board))
 4. **Deploy the stack.** Follow the `bootstrap` container logs: about 15 minutes on a typical connection
    (download ~5 min, database load ~5 min, analytics ~1 min). It ends with `Bootstrap complete.` and exits (status *Exited (0)*, which is expected).
 5. Open `http://<server>:8080`. Before the bootstrap finishes, the site loads but has no data yet.
@@ -43,6 +44,42 @@ The image contains code only. Football data is downloaded directly from StatsBom
 
 Put it behind your reverse proxy (Traefik, Nginx Proxy Manager, Caddy…) with HTTPS, pointing to the `app` port.
 The app trusts `X-Forwarded-*` headers. The API is read-only and serves aggregated metrics only.
+
+## Login (recruitment board)
+
+The analytics pages are public. The recruitment board (shortlists, tags, notes) needs a login, provided by an
+external identity service (decision D032). Set `AUTH_PROVIDER` on the stack:
+
+| `AUTH_PROVIDER` | Behaviour |
+|---|---|
+| `disabled` (default) | No login, no board. |
+| `dev` | Everyone who can open the site is the same "Local user". **Only** for an instance reachable by you alone (LAN, VPN). |
+| `oidc` | Real accounts through Amazon Cognito or any OpenID Connect provider (Keycloak, Auth0, Entra ID…). |
+
+### Amazon Cognito
+
+1. AWS console → Cognito → **Create user pool**. Application type: **Single-page application (SPA)**, which creates
+   an app client **without a client secret** (the browser cannot keep a secret). Sign-in identifier: email.
+   Return URL: `https://<your-host>/auth/callback`.
+2. In the app client's **Login pages** settings, check:
+   - Allowed callback URLs: `https://<your-host>/auth/callback` (add `http://localhost:5173/auth/callback` for local development)
+   - OAuth grant type: **Authorization code grant**
+   - Scopes: `openid`, `email`, `profile`
+3. The user pool needs a domain (Cognito domain or your own): it hosts the login page.
+4. Create users in the console, or enable self-registration.
+5. Stack environment:
+   - `AUTH_PROVIDER=oidc`
+   - `OIDC_ISSUER=https://cognito-idp.<region>.amazonaws.com/<user-pool-id>`
+   - `OIDC_CLIENT_ID=<app client id>`
+6. Redeploy. "Log in" appears in the top bar and redirects to the Cognito login page.
+
+Cognito only accepts HTTPS callback URLs (except `localhost`), so the site must be behind your HTTPS reverse proxy.
+The server only verifies tokens: it never receives passwords and stores no secret. Board data stays in your database
+(`app_users`, `shortlists`, `player_tags`, `player_notes`) and is included in the `pgdata` backup.
+
+Limits (v1): no refresh token, so users log in again after the token expires (1 hour by default); "Log out" ends the
+session in the browser, not on Cognito. The flow is covered by automated tests with locally signed tokens, but has
+not yet been run against a live user pool: check it once after your first setup.
 
 ## Operations
 

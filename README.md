@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Saff-Buraq-Dev/football-scouting-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/Saff-Buraq-Dev/football-scouting-analytics/actions/workflows/ci.yml)
 
-A football analytics and scouting platform built on event data: player profiles, comparison, scouting, team analysis, similarity search and shot maps. Every metric has a written definition, and every method was **validated on the data before it was shipped**.
+A football analytics and scouting platform built on event data: player profiles, comparison, scouting, team analysis, similarity search, shot and zone maps, Expected Threat, pressing maps, match pages with passing networks, corner analysis, player types, one-page PDF reports and a recruitment board. Every metric has a written definition, and every method was **validated on the data before it was shipped**.
 
 It currently covers the 2015/16 Premier League, La Liga, Serie A and Ligue 1: **1,517 matches, 5.3 million events, 2,214 player-seasons, 80 teams**.
 
@@ -18,7 +18,7 @@ Most football dashboards show numbers. This project checks whether the numbers m
 | Can scouting avoid arbitrary weighted scores? | Shortlists are sound (players stay at the 70th–86th percentile) but hard thresholds are brittle | Pareto tiers instead of a score, plus a "near misses" list |
 | Which similarity measure recognises a player? | Fingerprint test across half-seasons: Euclidean on regressed profiles **25× better than chance**; Mahalanobis worse | Similarity percentile ("closer than 97 % of the group"), never a made-up "% similar" |
 
-Every decision is recorded in [docs/DECISIONS.md](docs/DECISIONS.md) (D001–D024), and every metric is defined in [docs/FOOTBALL_ANALYTICS.md](docs/FOOTBALL_ANALYTICS.md).
+Every decision is recorded in [docs/DECISIONS.md](docs/DECISIONS.md) (D001–D032), and every metric is defined in [docs/FOOTBALL_ANALYTICS.md](docs/FOOTBALL_ANALYTICS.md).
 
 ## Screenshots
 
@@ -56,9 +56,9 @@ StatsBomb open data ─► Provider adapter ─► Canonical model ─► Analyt
 | Ingestion and canonical model | Python 3.12, dataclasses, Parquet |
 | Storage | PostgreSQL 17 (plain SQL migrations) |
 | Analytics | pandas, NumPy: every rule has a test |
-| API | FastAPI, read-only, aggregated data only |
+| API | FastAPI; analytics read-only and aggregated only; recruitment board behind a pluggable login (Cognito / OIDC) |
 | Interface | React, TypeScript, Vite; light and dark themes; accessible charts |
-| Quality | about 290 tests; CI with a real PostgreSQL on every push |
+| Quality | about 380 tests; CI with a real PostgreSQL on every push |
 
 More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
@@ -78,6 +78,8 @@ cp .env.example .env && docker compose up -d                            # Postgr
 .venv/bin/uvicorn football_platform.api.app:app --port 8000             # API (docs at /docs)
 cd frontend && npm install && npm run dev                               # http://localhost:5173
 ```
+
+For the recruitment board locally, start the API with `AUTH_PROVIDER=dev` (single local user). Real accounts use Amazon Cognito or any OpenID Connect provider: see [deploy/README.md](deploy/README.md#login-recruitment-board).
 
 Tests: `.venv/bin/pytest` (database tests run when PostgreSQL is reachable) and `cd frontend && npm test`.
 
@@ -100,4 +102,4 @@ One image ([`safsaf90/football-scouting-analytics`](https://hub.docker.com/r/saf
 | [docs/DATA_PROVIDERS.md](docs/DATA_PROVIDERS.md) | evaluation of free and commercial data providers |
 | [docs/data/](docs/data/) | coverage audit, data dictionary, StatsBomb mapping specification |
 | [docs/FOOTBALL_ANALYTICS.md](docs/FOOTBALL_ANALYTICS.md) | metric definitions, methods, validation results |
-| [docs/DECISIONS.md](docs/DECISIONS.md) | decision log (D001–D024) |
+| [docs/DECISIONS.md](docs/DECISIONS.md) | decision log (D001–D032) |

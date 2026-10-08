@@ -1,6 +1,8 @@
 # Portainer stack (Stacks -> Add stack -> Web editor), or `docker compose -f deploy/portainer-stack.yml up -d`.
 # Required environment variable: POSTGRES_PASSWORD (letters and digits only: it is used in a URL).
 # Optional: APP_PORT (default 8080), IMAGE_TAG (default latest).
+# Login for the recruitment board (deploy/README.md, "Login"): AUTH_PROVIDER (disabled | dev | oidc, default disabled),
+# and for oidc (Amazon Cognito or any OpenID Connect provider): OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_SCOPES.
 
 services:
   db:
@@ -35,6 +37,10 @@ services:
     image: safsaf90/football-scouting-analytics:${IMAGE_TAG:-latest}
     environment:
       DATABASE_URL: postgresql://football:${POSTGRES_PASSWORD}@db:5432/football
+      AUTH_PROVIDER: ${AUTH_PROVIDER:-disabled}
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_SCOPES: ${OIDC_SCOPES:-openid email profile}
     ports:
       - "${APP_PORT:-8080}:8000"
     depends_on:

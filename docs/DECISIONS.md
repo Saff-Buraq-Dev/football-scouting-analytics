@@ -57,6 +57,7 @@ Consequences:
 | D029 | Corner analysis: taker-relative delivery zones, possession outcomes | Accepted |
 | D030 | Player archetypes: shape-based k-means, k chosen by half-season stability, no invented names | Accepted |
 | D031 | One-page scouting report: print-styled web page, PDF via the browser; reliability-filtered highlights | Accepted |
+| D032 | Recruitment board with pluggable login: AuthProvider interface (disabled, dev, OIDC/Cognito), owner-scoped user data | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -663,3 +664,30 @@ Reason: No new server dependency (WeasyPrint or a headless browser in the image 
 Alternatives considered: server-side PDF with WeasyPrint/ReportLab (second rendering of every chart, heavy image); a headless Chrome service (extra infrastructure, against the modular-monolith rule); "strengths / weaknesses" with a percentile threshold (an invented cut-off and a quality judgement that percentiles do not support).
 
 Consequences: PDF output depends on the user's browser (tested with Chrome). A scheduled or batch PDF export would need a server-side renderer later.
+
+---
+
+### Decision D032 — Recruitment board and pluggable login
+
+Date: 2026-10-08
+
+Status: Accepted
+
+Context: Scouts need to keep shortlists, tag players and write notes. That needs user accounts. The login will be run by an external identity service such as Amazon Cognito, so the application must not depend on one.
+
+Decision:
+- Authentication goes through an `AuthProvider` interface (`auth/`). Implementations: `disabled` (default), `dev` (single local user) and `oidc` (bearer JWT verification against an OpenID Connect issuer's published keys; Cognito ID and access tokens accepted). Chosen with `AUTH_PROVIDER`.
+- The browser logs in with the authorization-code flow and PKCE, as a public client. The server publishes the endpoints it needs at `/api/auth/config`.
+- Board data lives in its own layer (`board/`) and tables (migration 0009). Every query is scoped to the owner, and other users' ids answer 404.
+- Shortlists hold player-seasons, because the analytics behind a recommendation are per season. Tags and notes belong to the player; a note can name the season it is about.
+- The analytics stay public and read-only. Only `/api/me`, `/api/shortlists…`, `/api/tags` and `/api/players/{id}/board|tags|notes` need a login.
+
+Reason: An external identity provider handles passwords, MFA and account recovery better than custom code, and the interface keeps the app provider-agnostic, as it already is for data. Bearer tokens in a header (not cookies) make the write endpoints immune to cross-site request forgery.
+
+Alternatives considered: custom username/password accounts (password storage and recovery to build and secure); session cookies (would need CSRF protection); Cognito SDK (Amplify) in the frontend (couples the UI to AWS, large dependency); sharing shortlists between users (not requested; needs teams and permissions).
+
+Consequences:
+- No refresh token in v1: after the token expires (1 hour by default on Cognito) the user logs in again.
+- Logout clears the local session only; the identity provider's own session is not ended.
+- The `oidc` flow is tested with locally signed tokens and the RFC 7636 test vector, not yet against a live Cognito user pool.
+- `dev` mode gives every visitor the same account and must never be exposed publicly.

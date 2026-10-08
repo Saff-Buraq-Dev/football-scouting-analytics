@@ -252,7 +252,7 @@ Order chosen by dependencies. Each feature goes through analysis, tests, validat
 6. ✅ Set-piece analysis (corner delivery zones and outcomes) (D029)
 7. ✅ Player archetypes (clustering within position groups, stability-validated) (D030)
 8. ✅ One-page scouting report (PDF) (D031)
-9. Recruitment board (shortlists, tags, notes) behind an abstract authentication provider (development provider now, AWS Cognito later)
+9. ✅ Recruitment board (shortlists, tags, notes) behind an abstract authentication provider (development provider now, AWS Cognito later) (D032)
 
 ---
 

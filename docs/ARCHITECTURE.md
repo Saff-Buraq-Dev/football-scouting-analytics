@@ -53,7 +53,7 @@ Related documents: [DATA_PROVIDERS.md](DATA_PROVIDERS.md) (why these providers),
 
 ### Dependency rule
 
-Imports may only point **downwards** in this order: `api → analytics → canonical`, `providers → canonical`. Also `reports → analytics, database`, `pipeline → providers, database`, `api → analytics, database`, and `database → canonical`. The full table is enforced in `tests/test_architecture.py`.
+Imports may only point **downwards** in this order: `api → analytics → canonical`, `providers → canonical`. Also `reports → analytics, database`, `pipeline → providers, database`, `api → analytics, database, auth, board`, `board → database`, `auth → (nothing)`, and `database → canonical`. The full table is enforced in `tests/test_architecture.py`.
 
 - `analytics`, `api` and `frontend` must **never** import from `providers/`.
 - `canonical` imports nothing from the project except itself.
@@ -271,7 +271,9 @@ src/football_platform/
   pipeline/         # download, run adapters, validate, write Parquet, load database
   analytics/        # Phase 4: player-match counts, player-season per 90, percentiles (pandas)
   reports/          # Phase 4: database -> analytics -> report files + analytics snapshot (D018)
-  api/              # Phase 5-8: FastAPI, read-only, aggregated data only (players, comparison, scouting, teams)
+  api/              # Phase 5-8: FastAPI, aggregated data only (players, comparison, scouting, teams, matches)
+  auth/             # Phase 11.9: identity providers behind one interface (disabled, dev, OIDC/Cognito), D032
+  board/            # Phase 11.9: recruitment board (shortlists, tags, notes): user data, owner-scoped SQL
 frontend/           # Phase 5: React + TypeScript (Vite); built into the Docker image and served by the API
 deploy/             # Phase 10: Portainer stack, bootstrap script, deployment guide (D024)
 scripts/
@@ -303,6 +305,23 @@ python -m football_platform.pipeline.load_database     # load latest canonical o
 ```
 
 Layer rule: `database/` (connection, migrations) may import only `canonical`. The loader lives in `pipeline/`.
+
+### User data and login (Phase 11.9, decision D032)
+
+The recruitment board is the only **user-generated** data and the only part of the API that writes. It is kept apart from football data:
+
+```text
+Browser ──(1) login: authorization code + PKCE──► Identity provider (Amazon Cognito, any OIDC)
+   │  ◄────────────── access token (JWT, RS256) ──────────┘
+   └─(2) Authorization: Bearer <token> ──► api/board.py ──► auth/ AuthProvider.authenticate() → Identity(issuer, subject)
+                                                   └──► board/store.py (every query filtered by owner) ──► PostgreSQL
+```
+
+- **`auth/`**: one `AuthProvider` interface with three implementations chosen by `AUTH_PROVIDER`: `disabled` (default: board off, analytics stay public), `dev` (one local user, no credentials: local or private single-user instances only) and `oidc` (verifies RS256 JWTs: issuer, expiry, client via `aud` or Cognito's `client_id`, signature against the issuer's JWKS found through OpenID discovery). The API never sees a password. Switching to another provider means another implementation of the interface, nothing else.
+- **`board/`**: SQL for shortlists, entries, tags and notes. Every query carries the owner id; another user's rows answer 404, like rows that do not exist.
+- **Users** are created on first authenticated request, keyed by `(issuer, subject)`. Email and name are copied from the token when present.
+- **Tables** (migration 0009): `app_users`, `shortlists`, `shortlist_entries` (player-season), `player_tags`, `player_notes`. They reference `players` and `seasons`, which reloads upsert and never delete, so analytics reruns never touch user data.
+- **Frontend**: `auth/client.ts` exposes the same three modes. In `oidc` mode the browser runs the authorization-code flow with PKCE as a public client (no secret in the browser) and keeps the token in `sessionStorage`. The server provides the endpoints at `/api/auth/config`.
 
 ---
 
