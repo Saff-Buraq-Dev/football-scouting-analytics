@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { fetchTeamProfile, fetchTeamShots, type ShotZonesView, type TeamMetricRow, type TeamProfile } from "../api";
 import { PressingMaps } from "../components/PressingMaps";
 import { ShotZoneMap } from "../components/ShotZoneMap";
+import { TeamResults } from "../components/TeamResults";
 import { ROLE_LABELS, formatMinutes, formatPercentile, formatTeamValue } from "../format";
 
 function TeamMetric({ row }: { row: TeamMetricRow }) {
@@ -83,6 +84,8 @@ export function TeamProfilePage() {
           {profile.style.map((row) => <TeamMetric key={row.key} row={row} />)}
         </section>
       </div>
+
+      <TeamResults teamId={teamId} seasonId={seasonId} />
 
       <PressingMaps teamId={teamId} seasonId={seasonId} />
 

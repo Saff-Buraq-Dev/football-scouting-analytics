@@ -371,3 +371,58 @@ export interface PressingMapsResponse {
 export function fetchTeamPressing(teamId: string, seasonId: string, signal?: AbortSignal) {
   return getJson<PressingMapsResponse>(`/api/teams/${teamId}/seasons/${seasonId}/pressing`, signal);
 }
+
+export interface MatchListItem {
+  id: string;
+  season_id: string;
+  match_date: string;
+  matchweek: number | null;
+  home_team_id: string;
+  home_team: string;
+  away_team_id: string;
+  away_team: string;
+  home_score: number;
+  away_score: number;
+  competition: string;
+  season_label: string;
+}
+
+export interface NetworkNode { player_id: string; name: string; x: number; y: number; involvement: number }
+
+export interface MatchTeamView {
+  team_id: string;
+  goals: number;
+  xg: number;
+  npxg: number;
+  np_shots: number;
+  xpts: number;
+  possession_pct: number;
+  passes: number;
+  progressive_passes: number;
+  crosses: number;
+  ppda: number | null;
+  high_ball_wins: number;
+  xt: number | null;
+  network: { cutoff_minute: number; cutoff_reason: string; completed_passes: number; small_sample: boolean; nodes: NetworkNode[];
+    links: { a: string; b: string; passes: number }[] };
+  lineup: { player_id: string; name: string; starter: boolean; minutes: number; shirt: number | null }[];
+}
+
+export interface MatchReport {
+  match: MatchListItem & { venue: string | null; referee: string | null; stage: string | null };
+  home: MatchTeamView;
+  away: MatchTeamView;
+  xg_race: { minute: number; home_xg: number; away_xg: number; home_goals: number; away_goals: number }[];
+  standouts: { key: string; label: string; players: { player_id: string; name: string; team: string; value: number }[] }[];
+  notes: { xg_race: string; network: string; xpts: string };
+}
+
+export function fetchMatches(seasonId: string, teamId?: string, signal?: AbortSignal) {
+  const query = new URLSearchParams({ season_id: seasonId });
+  if (teamId) query.set("team_id", teamId);
+  return getJson<{ matches: MatchListItem[] }>(`/api/matches?${query}`, signal);
+}
+
+export function fetchMatchReport(matchId: string, signal?: AbortSignal) {
+  return getJson<MatchReport>(`/api/matches/${matchId}`, signal);
+}

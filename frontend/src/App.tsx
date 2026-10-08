@@ -1,6 +1,8 @@
 import { Link, Route, Routes } from "react-router-dom";
 import { DataAttribution } from "./components/DataAttribution";
 import { ComparePage } from "./pages/ComparePage";
+import { MatchPage } from "./pages/MatchPage";
+import { MatchesPage } from "./pages/MatchesPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ScoutingPage } from "./pages/ScoutingPage";
 import { TeamProfilePage } from "./pages/TeamProfilePage";
@@ -30,6 +32,7 @@ export function App() {
           <Link to="/scouting">Scouting</Link>
           <Link to="/compare">Compare</Link>
           <Link to="/teams">Teams</Link>
+          <Link to="/matches">Matches</Link>
           <span className="topbar-meta">2015/16 · Premier League, La Liga, Serie A, Ligue 1</span>
         </nav>
       </header>
@@ -40,6 +43,8 @@ export function App() {
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/scouting" element={<ScoutingPage />} />
           <Route path="/teams" element={<TeamsPage />} />
+          <Route path="/matches" element={<MatchesPage />} />
+          <Route path="/matches/:matchId" element={<MatchPage />} />
           <Route path="/teams/:teamId/seasons/:seasonId" element={<TeamProfilePage />} />
         </Routes>
       </main>
