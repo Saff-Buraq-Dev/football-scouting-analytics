@@ -1,5 +1,10 @@
 import { Link, Route, Routes } from "react-router-dom";
 import { DataAttribution } from "./components/DataAttribution";
+import { UserMenu } from "./components/UserMenu";
+import { useAuth } from "./auth/AuthContext";
+import { CALLBACK_PATH } from "./auth/client";
+import { AuthCallbackPage } from "./pages/AuthCallbackPage";
+import { BoardPage } from "./pages/BoardPage";
 import { ArchetypesPage } from "./pages/ArchetypesPage";
 import { ComparePage } from "./pages/ComparePage";
 import { MatchPage } from "./pages/MatchPage";
@@ -22,6 +27,7 @@ function PitchMark() {
 }
 
 export function App() {
+  const { client } = useAuth();
   return (
     <div className="shell">
       <header className="topbar">
@@ -36,7 +42,9 @@ export function App() {
           <Link to="/archetypes">Types</Link>
           <Link to="/teams">Teams</Link>
           <Link to="/matches">Matches</Link>
+          {client && client.mode !== "disabled" && <Link to="/board">Board</Link>}
           <span className="topbar-meta">2015/16 · Premier League, La Liga, Serie A, Ligue 1</span>
+          <UserMenu />
         </nav>
       </header>
       <main>
@@ -50,6 +58,8 @@ export function App() {
           <Route path="/teams" element={<TeamsPage />} />
           <Route path="/matches" element={<MatchesPage />} />
           <Route path="/matches/:matchId" element={<MatchPage />} />
+          <Route path="/board" element={<BoardPage />} />
+          <Route path={CALLBACK_PATH} element={<AuthCallbackPage />} />
           <Route path="/teams/:teamId/seasons/:seasonId" element={<TeamProfilePage />} />
         </Routes>
       </main>

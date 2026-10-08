@@ -5,6 +5,8 @@ import {
   type HighlightMetric, type PlayerArchetype, type Profile, type ReportHighlights, type ShotZonesView, type SimilarityResponse,
   type ZoneMapsResponse,
 } from "../api";
+import { useBoardApi } from "../auth/useBoard";
+import type { PlayerBoard } from "../board";
 import { DataAttribution } from "../components/DataAttribution";
 import { PercentileBar } from "../components/PercentileBar";
 import { ShotZonePitch } from "../components/ShotZoneMap";
@@ -14,6 +16,9 @@ import {
 } from "../format";
 
 const SIMILAR_SHOWN = 5;
+// Scout notes on the printed page: the most recent ones, shortened, so the report stays on one A4 page.
+const NOTES_SHOWN = 3;
+const NOTE_CHARS = 220;
 
 interface Extras {
   archetype: PlayerArchetype | null;
@@ -34,6 +39,13 @@ export function ReportPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [extras, setExtras] = useState<Extras | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const boardApi = useBoardApi();
+  const [board, setBoard] = useState<PlayerBoard | null>(null);
+
+  useEffect(() => {
+    setBoard(null);
+    boardApi?.playerBoard(playerId).then(setBoard).catch(() => undefined);
+  }, [boardApi, playerId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -191,11 +203,12 @@ export function ReportPage() {
           </section>
         )}
 
+        {board && <ScoutNotes board={board} seasonId={seasonId} />}
+
         <footer className="report-foot">
           <p>
-            Percentiles describe one season within the position group across 4 leagues (2015/16); they are not a quality
-            rating. Reliability = split-half stability of the metric at this playing time. Highlights use metrics of at
-            least medium reliability. Zones and shots are aggregated. Method: docs/FOOTBALL_ANALYTICS.md. Generated {generated}.
+            Percentiles: one season within the position group, 4 leagues 2015/16; not a quality rating. Highlights
+            use metrics of at least medium reliability. Method: docs/FOOTBALL_ANALYTICS.md · Generated {generated}.
           </p>
           <DataAttribution />
         </footer>
@@ -222,6 +235,25 @@ function Highlights({ highlights }: { highlights: ReportHighlights }) {
       {highlights.low_reliability.length > 0 && (
         <p className="report-note wide">Left out (low reliability): {highlights.low_reliability.map(inSentence).join(", ")}.</p>
       )}
+    </section>
+  );
+}
+
+function ScoutNotes({ board, seasonId }: { board: PlayerBoard; seasonId: string }) {
+  // Notes about this season, or about the player in general.
+  const notes = board.notes.filter((n) => n.season_id === null || n.season_id === seasonId);
+  if (notes.length === 0 && board.tags.length === 0) return null;
+  const shorten = (text: string) => (text.length > NOTE_CHARS ? `${text.slice(0, NOTE_CHARS - 1)}…` : text);
+  return (
+    <section className="report-section report-notes">
+      <h2>Scout notes {board.tags.length > 0 && <span className="muted">tags: {board.tags.join(", ")}</span>}</h2>
+      {notes.slice(0, NOTES_SHOWN).map((n) => (
+        <p key={n.id}>
+          <span className="muted">{new Date(n.created_at).toLocaleDateString("en-GB")}:</span> {shorten(n.body)}
+        </p>
+      ))}
+      {notes.length > NOTES_SHOWN && <p className="muted">{notes.length - NOTES_SHOWN} older notes not shown.</p>}
+      <p className="report-note">Notes are the author's opinion, not derived from the data.</p>
     </section>
   );
 }

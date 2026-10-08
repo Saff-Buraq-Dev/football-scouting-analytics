@@ -4,6 +4,7 @@ import { fetchProfile, type Profile } from "../api";
 import { AllMetricsTable } from "../components/AllMetricsTable";
 import { MetricRow, ScaleLegend } from "../components/MetricRow";
 import { ArchetypeCard } from "../components/ArchetypeCard";
+import { BoardPanel } from "../components/BoardPanel";
 import { PlayerShotMap } from "../components/PlayerShotMap";
 import { SimilarPlayers } from "../components/SimilarPlayers";
 import { ZoneMaps } from "../components/ZoneMaps";
@@ -115,6 +116,8 @@ export function ProfilePage() {
           </section>
         ))}
       </div>
+
+      <BoardPanel playerId={playerId} seasonId={seasonId} seasonLabel={`${profile.season.competition} ${profile.season.label}`} />
 
       <ArchetypeCard playerId={playerId} seasonId={seasonId} />
 

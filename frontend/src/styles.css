@@ -455,7 +455,7 @@ button.button:disabled { opacity: 0.5; cursor: default; }
 .report-section h2 { font-size: 12.5px; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.04em; }
 .report-section h2 .muted { text-transform: none; letter-spacing: 0; font-weight: 400; }
 .report-section svg { width: 100%; height: auto; display: block; }
-.report-pitch svg { max-width: 235px; margin: 0 auto; }
+.report-pitch svg { max-width: 200px; margin: 0 auto; }
 .report-theme h3 { font-size: 11.5px; margin: 8px 0 2px; color: var(--text-secondary); }
 .report-metric { display: grid; grid-template-columns: minmax(120px, 1.1fr) 1fr 40px 24px; gap: 8px; align-items: center; }
 .report-metric .pbar { height: 16px; }
@@ -466,8 +466,9 @@ button.button:disabled { opacity: 0.5; cursor: default; }
 .report-highlights .wide { grid-column: 1 / -1; margin: 0; }
 .report-highlights b { font-variant-numeric: tabular-nums; }
 .report-note { font-size: 10.5px; color: var(--text-muted); margin: 8px 0 0; }
-.report .table td { padding: 4px 6px; }
-.report-foot { margin-top: 14px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 10px; color: var(--text-muted); display: grid; gap: 6px; }
+.report .table td { padding: 3px 6px; }
+.report-foot { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 10px; color: var(--text-muted); display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; align-items: center; }
+.report-foot .attribution { font-size: 10px; }
 .report-foot p { margin: 0; }
 
 @media (max-width: 760px) {
@@ -486,3 +487,48 @@ button.button:disabled { opacity: 0.5; cursor: default; }
   .report-grid { grid-template-columns: 1.45fr 1fr; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* ---- Recruitment board (Phase 11.9) ------------------------------------- */
+.user-chip { font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; }
+.link-button { background: none; border: none; padding: 0; color: var(--text-secondary); text-decoration: underline; cursor: pointer; font: inherit; font-size: 12.5px; }
+.link-button:hover { color: var(--text-primary); }
+.chips { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 12.5px;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-primary); font-family: inherit;
+}
+button.chip { cursor: pointer; }
+.chip.on { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+.chip button { background: none; border: none; padding: 0 0 0 2px; cursor: pointer; color: var(--text-muted); font-size: 14px; line-height: 1; }
+.chip button:hover { color: var(--text-primary); }
+.inline-form { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.inline-form input, .inline-form select, .note-form textarea {
+  font: inherit; font-size: 13px; padding: 5px 8px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--surface-1); color: var(--text-primary);
+}
+.board-row { display: grid; grid-template-columns: 90px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--gridline); align-items: start; }
+.board-label { font-size: 12.5px; font-weight: 600; color: var(--text-secondary); padding-top: 4px; }
+.note-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; margin-bottom: 8px; }
+.note-form textarea { resize: vertical; width: 100%; }
+.note { padding: 8px 0; border-top: 1px dashed var(--gridline); }
+.note p { margin: 0 0 2px; white-space: pre-wrap; }
+.board-layout { display: grid; grid-template-columns: 240px 1fr; gap: 18px; align-items: start; }
+.board-lists ul { list-style: none; margin: 0 0 12px; padding: 0; }
+.board-lists li button {
+  width: 100%; display: flex; justify-content: space-between; gap: 8px; padding: 7px 9px; border: none; border-radius: 7px;
+  background: none; color: var(--text-primary); font: inherit; text-align: left; cursor: pointer;
+}
+.board-lists li button:hover { background: var(--surface-2); }
+.board-lists li button.on { background: var(--surface-2); font-weight: 600; }
+.board-lists .inline-form input { flex: 1; min-width: 0; }
+.board-list-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; padding: 16px 18px 8px; }
+.board-filter { padding: 0 18px 10px; }
+.row-actions { white-space: nowrap; text-align: right; }
+.row-actions .link-button { margin-left: 10px; }
+.report-notes p { margin: 0 0 4px; }
+@media (max-width: 760px) {
+  .board-layout { grid-template-columns: 1fr; }
+  .board-row { grid-template-columns: 1fr; gap: 4px; }
+  .note-form { grid-template-columns: 1fr; }
+}
+@media print { .user-chip { display: none; } }
