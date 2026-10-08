@@ -22,12 +22,14 @@ const ZONE_RECTS: Record<string, Rect[]> = {
 };
 
 const SCALE = 6; // px per metre
-const svgX = (y: number) => y * SCALE;
+// Canonical y = 68 is the attacking team's LEFT touchline (docs/ARCHITECTURE.md §4.2): with the goal at the
+// top of the drawing, the attacker's left must be on the left of the screen.
+const svgX = (y: number) => (WIDTH_M - y) * SCALE;
 const svgY = (x: number) => (105 - x) * SCALE;
 
 function zoneRects(key: string) {
   return ZONE_RECTS[key].map(([x0, x1, y0, y1]) => ({
-    x: svgX(y0), y: svgY(x1), width: (y1 - y0) * SCALE, height: (x1 - x0) * SCALE,
+    x: svgX(y1), y: svgY(x1), width: (y1 - y0) * SCALE, height: (x1 - x0) * SCALE,
   }));
 }
 
@@ -72,9 +74,9 @@ export function ShotZoneMap({ title, view, baselineLabel }: Props) {
           ))}
           {/* Pitch markings on top of the fills */}
           <rect className="line" x={0} y={0} width={WIDTH_M * SCALE} height={(105 - HALF) * SCALE} />
-          <rect className="line" x={svgX(34 - BOX_HALF)} y={0} width={2 * BOX_HALF * SCALE} height={(105 - BOX_X) * SCALE} />
-          <rect className="line" x={svgX(34 - GOAL_HALF)} y={0} width={2 * GOAL_HALF * SCALE} height={(105 - SIX_X) * SCALE} />
-          <line className="goal" x1={svgX(34 - 3.66)} x2={svgX(34 + 3.66)} y1={0} y2={0} />
+          <rect className="line" x={svgX(34 + BOX_HALF)} y={0} width={2 * BOX_HALF * SCALE} height={(105 - BOX_X) * SCALE} />
+          <rect className="line" x={svgX(34 + GOAL_HALF)} y={0} width={2 * GOAL_HALF * SCALE} height={(105 - SIX_X) * SCALE} />
+          <line className="goal" x1={svgX(34 + 3.66)} x2={svgX(34 - 3.66)} y1={0} y2={0} />
           {view.zones.filter((z) => z.shots > 0 && z.key !== "outside_wide").map((zone) => {
             const p = labelPosition(zone.key);
             return (

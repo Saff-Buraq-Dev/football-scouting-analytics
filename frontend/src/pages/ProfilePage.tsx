@@ -5,6 +5,7 @@ import { AllMetricsTable } from "../components/AllMetricsTable";
 import { MetricRow, ScaleLegend } from "../components/MetricRow";
 import { PlayerShotMap } from "../components/PlayerShotMap";
 import { SimilarPlayers } from "../components/SimilarPlayers";
+import { ZoneMaps } from "../components/ZoneMaps";
 import { POSITION_GROUP_PLURALS, ROLE_LABELS, formatMinutes, formatShare } from "../format";
 
 export function ProfilePage() {
@@ -110,6 +111,8 @@ export function ProfilePage() {
           </section>
         ))}
       </div>
+
+      <ZoneMaps playerId={playerId} seasonId={seasonId} />
 
       {pt.position_group !== "goalkeeper" && <PlayerShotMap playerId={playerId} seasonId={seasonId} />}
 

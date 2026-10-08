@@ -343,3 +343,22 @@ export function fetchPlayerShots(playerId: string, seasonId: string, signal?: Ab
 export function fetchTeamShots(teamId: string, seasonId: string, signal?: AbortSignal) {
   return getJson<{ for: ShotZonesView; against: ShotZonesView }>(`/api/teams/${teamId}/seasons/${seasonId}/shots`, signal);
 }
+
+export interface ZoneCell {
+  index: number;
+  strip: number;
+  channel: string;
+  count: number;
+  share: number;
+  group_share: number;
+}
+
+export interface ZoneMapsResponse {
+  layout: { strip_edges: number[]; channel_edges: number[]; channels: string[] };
+  position_group: string | null;
+  maps: { key: "touches" | "receptions" | "progression"; description: string; total: number; zones: ZoneCell[] }[];
+}
+
+export function fetchPlayerZones(playerId: string, seasonId: string, signal?: AbortSignal) {
+  return getJson<ZoneMapsResponse>(`/api/players/${playerId}/seasons/${seasonId}/zones`, signal);
+}
