@@ -947,3 +947,42 @@ Each zone shows the player's **share** of the map's actions, and the **position 
 - Shares hide volume: the action count is shown with each map.
 - The group baseline pools players, so high-volume players weigh more.
 - One season, all game states mixed.
+
+---
+
+# Phase 11.3 — Pressing maps
+
+Status: implemented (decision D027).
+
+## Football questions
+
+- **Where does the team defend?** A high press and a low block produce different maps for the same number of actions.
+- **Where does it win the ball back?** Winning the ball in the final third means attacking a disorganised defence.
+
+## Metrics (team-season, within-league percentiles)
+
+| Metric | Definition |
+|---|---|
+| `defensive_height_m` | mean distance from the team's own goal of its defensive actions (ground duels, interceptions, ball recoveries, fouls committed) |
+| `high_ball_wins_per_match` | tackles won, interceptions and successful ball recoveries with x ≥ 70 m (final third), per match |
+
+Both use **provider-independent** events. StatsBomb "pressure" events are deliberately excluded, so that teams and providers stay comparable (D001, D007).
+
+## Maps
+
+Defensive actions and ball wins on the zone grid of Phase 11.2 (6 strips × 5 channels), compared with the league-season pooled distribution. Aggregates only (D004).
+
+## Validation (`.venv/bin/python scripts/validation/phase11_pressing_validation.py`)
+
+Both metrics must agree with PPDA (lower PPDA = more intense pressing):
+
+| League | r (PPDA, defensive height) | r (PPDA, high ball wins) |
+|---|---:|---:|
+| La Liga | −0.57 | −0.41 |
+| Ligue 1 | −0.86 | −0.73 |
+| Premier League | −0.77 | −0.72 |
+| Serie A | −0.53 | −0.47 |
+
+Highest defensive actions: Barcelona, Manchester City, Juventus, Napoli, PSG, Lyon, Tottenham. Lowest: Stoke City, Newcastle, Aston Villa, Troyes. Tottenham 2015/16 (Pochettino): defensive height at the 90th percentile and high ball wins at the 95th.
+
+**Limitation:** values span a narrow range (about 40–48 m), because averages compress differences. They are meaningful within a league, not as absolute "line heights".

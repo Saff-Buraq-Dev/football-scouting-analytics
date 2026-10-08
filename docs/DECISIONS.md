@@ -52,6 +52,7 @@ Consequences:
 | D024 | Self-hosted deployment: one code-only image, data bootstrapped on the host | Accepted |
 | D025 | Expected Threat (xT) as a progression metric | Accepted |
 | D026 | Player zone maps on a 6 × 5 channel grid; canonical left/right convention | Accepted |
+| D027 | Pressing metrics and maps from provider-independent defensive events | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -564,3 +565,21 @@ Reason: Channels are the vocabulary coaches use. Provider-independent definition
 Alternatives considered: a uniform 16 × 12 grid (too sparse per player); continuous heatmaps by kernel density (look precise but smooth over the sample size and imply event-level detail); StatsBomb ball receipts (provider-specific).
 
 Consequences: The first request for a position group takes about 4 s (baseline computation), and later ones are immediate.
+
+---
+
+### Decision D027 — Pressing metrics and maps
+
+Date: 2026-10-08
+
+Status: Accepted
+
+Context: PPDA gives pressing intensity without a location. Scouts and analysts want to see where a team defends and wins the ball.
+
+Decision: Two team metrics, defensive action height and final-third ball wins per match, plus two zone maps (defensive actions, ball wins) compared with the league average. They are built only from provider-independent events (tackles, interceptions, recoveries, fouls), and StatsBomb pressures are excluded. The zone-map renderer is now a shared component (`ZoneGrid`) for player and team maps.
+
+Reason: Validated against PPDA in all four leagues (r −0.41 to −0.86). Comparable across providers.
+
+Alternatives considered: StatsBomb pressure locations (richer, but provider-specific); defensive line height from tracking data (not available).
+
+Consequences: The height metric compresses differences (40–48 m), so it is read through within-league percentiles.
