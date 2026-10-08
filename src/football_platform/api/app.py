@@ -27,6 +27,8 @@ from football_platform.analytics.xt import XTModel
 from football_platform.api import repository
 from football_platform.api.comparison import MAX_PLAYERS, MIN_PLAYERS, build_comparison
 from football_platform.api.scouting import InvalidCriteriaError, build_scouting_result, parse_criteria, presets_payload
+from football_platform.api.archetypes import overview as archetypes_overview
+from football_platform.api.archetypes import player_view as archetype_player_view
 from football_platform.api.corners import build_corner_report, season_corners
 from football_platform.api.match import build_match_report
 from football_platform.api.pressing import build_pressing_maps
@@ -218,6 +220,18 @@ def create_app(db_url: str | None = None) -> FastAPI:
             match, repository.match_events(conn, str(match_id)), repository.match_metrics(conn, str(match_id)),
             repository.match_appearances(conn, str(match_id)), repository.match_spells(conn, str(match_id)), xt,
         )
+
+    @app.get("/api/archetypes")
+    def archetype_overview(conn: Conn) -> dict:
+        return archetypes_overview(repository.archetypes(conn))
+
+    @app.get("/api/players/{player_id}/seasons/{season_id}/archetype")
+    def player_archetype(conn: Conn, player_id: UUID, season_id: UUID) -> dict:
+        view = archetype_player_view(repository.player_archetype(conn, str(player_id), str(season_id)),
+                                     repository.archetypes(conn))
+        if view is None:
+            raise HTTPException(status_code=404, detail="No archetype for this player-season")
+        return view
 
     @app.get("/api/scouting/presets")
     def scouting_presets() -> list[dict]:

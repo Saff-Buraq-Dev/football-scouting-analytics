@@ -336,3 +336,22 @@ def season_corner_events(conn: psycopg.Connection, season_id: str) -> list[dict[
         LEFT JOIN provider_metrics m ON m.event_id = e.id AND m.metric_key = 'xg'
         WHERE mt.season_id = %s AND (e.type = 'shot' OR (e.type = 'pass' AND e.set_piece = 'corner'))""",
         (season_id,))
+
+
+ARCHETYPE_SELECT = """
+    SELECT a.position_group, a.archetype_index, a.size, a.more_features, a.less_features,
+           (SELECT json_agg(json_build_object('player_id', p.id, 'season_id', u.season_id,
+                                              'name', coalesce(p.known_name, p.name)) ORDER BY u.ord)
+            FROM unnest(a.prototypes, a.prototype_seasons) WITH ORDINALITY AS u(player_id, season_id, ord)
+            JOIN players p ON p.id = u.player_id) AS prototypes
+    FROM archetypes a"""
+
+
+def archetypes(conn: psycopg.Connection) -> list[dict[str, Any]]:
+    return _rows(conn, f"{ARCHETYPE_SELECT} ORDER BY a.position_group, a.archetype_index")
+
+
+def player_archetype(conn: psycopg.Connection, player_id: str, season_id: str) -> dict[str, Any] | None:
+    rows = _rows(conn, """SELECT position_group, archetype_index, distance, second_index, second_distance
+        FROM player_archetypes WHERE player_id = %s AND season_id = %s""", (player_id, season_id))
+    return rows[0] if rows else None
