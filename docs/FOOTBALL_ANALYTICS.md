@@ -912,3 +912,38 @@ Reproduce: `cd scripts/validation && ../../.venv/bin/python phase11_xt_validatio
 **Effect on similarity (Phase 9a):** adding xT to the templates slightly improves the fingerprint test (Euclidean regressed: top-5 34.0 % → 35.9 %, top-10 % 59.6 % → 62.6 %).
 
 **Face validity** (2015/16, ≥ 900 min): xT from passes, central midfielders: James Rodríguez, Barrada, Pastore, Fàbregas, Milner. xT from carries, attacking midfielders and wingers: Neymar, Keita Baldé, Mertens, Messi. Full-backs: Alex Sandro, Carvajal, Maicon, Dani Alves, Mendy. Centre-backs: Mascherano, Maksimović, Juan Jesus, Blind.
+
+---
+
+# Phase 11.2 — Touch, reception and progression zone maps
+
+Status: implemented (decision D026).
+
+## Football questions
+
+- **Touches:** where is the player involved with the ball?
+- **Receptions:** where does he receive passes? (A false nine dropping deep and a striker on the last line have different maps.)
+- **Progression:** where do his progressive passes and carries take the ball?
+
+## Zones
+
+**6 strips** along the pitch (17.5 m each) × **5 channels** across it: right wing, right half-space, centre, left half-space, left wing. Channel edges are the pitch markings: penalty-box lines (y = 13.84 and 54.16) and six-yard-box lines (y = 24.84 and 43.16). This is the wings / half-spaces / centre frame used in coaching. Canonical y = 68 is the attacking team's **left** (docs/ARCHITECTURE.md §4.2).
+
+| Map | Events (provider-independent) |
+|---|---|
+| Touches | the player's passes, shots, take-ons, ball recoveries, interceptions, clearances, miscontrols and dispossessions (start location). Carries and ball receipts are excluded because they are StatsBomb-specific |
+| Receptions | **completed passes whose recipient is the player** (end location). This uses the pass recipient field, available from most providers, rather than StatsBomb "ball receipt" events |
+| Progression | end locations of the player's progressive actions: completed open-play passes and carries meeting the Phase 4 progressive definition (carries capability-gated) |
+
+Each zone shows the player's **share** of the map's actions, and the **position group's share** (all eligible players of the group pooled). The view offers two encodings: share (single hue, opacity = magnitude) and difference from the group (diverging blue/red). The API returns zone aggregates only (D004).
+
+## Validation
+
+- **Orientation:** Marcelo (left-back) has 72 % of his touches and 77 % of his receptions in the left-wing channel, and 0 % on the right. This check exposed a mirrored left/right drawing in the shot map (invisible there because its zones are symmetric), which was fixed.
+- **Football reading:** Marcelo's progressive actions end mostly in the left half-space (43 %) rather than on the wing (37 %): he moves inside with the ball, a known trait of his game.
+
+## Limitations
+
+- Shares hide volume: the action count is shown with each map.
+- The group baseline pools players, so high-volume players weigh more.
+- One season, all game states mixed.

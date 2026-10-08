@@ -116,7 +116,7 @@ Example: a "pressures per 90" metric is computed only for sources where `has_pre
 
 ### 4.2 Coordinates (D005)
 
-- Canonical pitch: **105 × 68 metres**, origin at the bottom-left corner, **x = 0 at the acting team's own goal line, attacking towards x = 105**.
+- Canonical pitch: **105 × 68 metres**, origin at the bottom-left corner, **x = 0 at the acting team's own goal line, attacking towards x = 105**. Facing the opponent's goal, **y = 68 is the attacking team's left touchline** and y = 0 its right. Drawings must respect this, otherwise left and right are mirrored (a bug found and fixed in the shot map, Phase 11.2).
 - Adapters convert. StatsBomb: `x_m = x / 120 × 105`, `y_m = (80 − y) / 80 × 68` (StatsBomb's y grows downwards). Wyscout/Opta: `x_m = x / 100 × 105`, with the y flip chosen per provider. Exact formulas are verified by tests in Phase 2.
 - **Limitation:** real pitch dimensions vary (100–110 m × 64–75 m) and are rarely supplied. Distances in metres are therefore approximations, which matters for metrics like "progressive pass ≥ 10 m".
 

@@ -51,6 +51,7 @@ Consequences:
 | D023 | Shot maps as zone aggregates, never individual shots through the API | Accepted |
 | D024 | Self-hosted deployment: one code-only image, data bootstrapped on the host | Accepted |
 | D025 | Expected Threat (xT) as a progression metric | Accepted |
+| D026 | Player zone maps on a 6 × 5 channel grid; canonical left/right convention | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -543,3 +544,23 @@ Reason: Public, explainable method. Validation shows xT is a stable player trait
 Alternatives considered: possession-value models with machine learning (VAEP, OBV-like): less transparent and need more data; penalising failed actions (v2 candidate).
 
 Consequences: The pre-registered criterion (predicting a player's own npxG + xA) failed and is documented. xT is presented as a progression metric only. Failed actions are not penalised in v1.
+
+---
+
+### Decision D026 — Player zone maps
+
+Date: 2026-10-08
+
+Status: Accepted
+
+Context: Scouts want to see where a player plays, receives and progresses the ball, not only how much.
+
+Decision: Three zone maps (touches, receptions, progression) on a 6 × 5 grid whose channels follow the pitch markings (wings, half-spaces, centre). Receptions come from the pass recipient field (provider-independent), not from StatsBomb ball-receipt events. Each map is compared with the position group's pooled distribution, and the API returns aggregates only. A partial index on `events.pass_recipient_id` (migration 0006) keeps reception queries fast, and group baselines are cached per process.
+
+The canonical convention is made explicit: **y = 68 is the attacking team's left**. The shot map drew it mirrored, a bug found by this feature's orientation check and fixed.
+
+Reason: Channels are the vocabulary coaches use. Provider-independent definitions keep D001. Aggregates keep D004.
+
+Alternatives considered: a uniform 16 × 12 grid (too sparse per player); continuous heatmaps by kernel density (look precise but smooth over the sample size and imply event-level detail); StatsBomb ball receipts (provider-specific).
+
+Consequences: The first request for a position group takes about 4 s (baseline computation), and later ones are immediate.
