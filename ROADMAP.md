@@ -249,7 +249,7 @@ Order chosen by dependencies. Each feature goes through analysis, tests, validat
 3. ✅ Pressing maps (team, where the ball is won back) (D027)
 4. ✅ Match pages (xG race, team comparison, standouts) (D028)
 5. ✅ Passing networks (per team per match, on match pages) (D028)
-6. Set-piece analysis (corner delivery zones and outcomes)
+6. ✅ Set-piece analysis (corner delivery zones and outcomes) (D029)
 7. Player archetypes (clustering within position groups, stability-validated)
 8. One-page scouting report (PDF)
 9. Recruitment board (shortlists, tags, notes) behind an abstract authentication provider (development provider now, AWS Cognito later)

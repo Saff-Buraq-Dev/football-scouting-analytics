@@ -54,6 +54,7 @@ Consequences:
 | D026 | Player zone maps on a 6 × 5 channel grid; canonical left/right convention | Accepted |
 | D027 | Pressing metrics and maps from provider-independent defensive events | Accepted |
 | D028 | Match pages: binned xG race, stored xT model, networks until the first change | Accepted |
+| D029 | Corner analysis: taker-relative delivery zones, possession outcomes | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -606,3 +607,21 @@ Reason: Binned xG keeps D004 while showing the match narrative. A stored model m
 Alternatives considered: a shot-by-shot xG timeline (event-level data); pre-computing all match reports (unneeded at 0.15 s); networks over the whole match (they mix substitutes into one picture).
 
 Consequences: The score is reproduced exactly for every match (validated). Networks are flagged when based on fewer than 100 passes.
+
+---
+
+### Decision D029 — Corner analysis
+
+Date: 2026-10-08
+
+Status: Accepted
+
+Context: Set pieces produce a large share of goals (25–49 % of npxG per team, Phase 8). Clubs analyse corners by delivery target and outcome.
+
+Decision: Corners are mirrored to the taker's side and classified into six delivery zones. Their outcome is the shots, xG and goals of the possession they start. A team panel shows corners taken and conceded against the league average per team-match. League corner outcomes are computed once per season and cached in the API process.
+
+Reason: Taker-relative zones match coaching language (near post / far post). Possession outcomes capture flick-ons and second balls, not only direct headers.
+
+Alternatives considered: the first touch only (misses second balls); delivery technique (not in the canonical model); free kicks (heterogeneous, from anywhere on the pitch; a separate analysis later).
+
+Consequences: Outcomes need possession ids (capability-gated). Rare zones are shown with their counts.

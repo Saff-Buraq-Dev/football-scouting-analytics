@@ -1019,3 +1019,33 @@ What happened in the match, was the result deserved, how did each team play, and
 - The network ignores the starting XI's changes in shape during the match.
 - xG bins hide the exact minute of each chance (by design, D004).
 - No game-state adjustment (a team leading may sit deeper).
+
+---
+
+# Phase 11.6 — Corner analysis
+
+Status: implemented (decision D029).
+
+## Football questions
+
+Where does a team deliver its corners, how dangerous are they, and how dangerous are the corners it concedes?
+
+## Method
+
+- **Corners:** passes with `set_piece = corner` (canonical).
+- **Mirroring:** each corner is mirrored so the taker is on the attacker's left (y = 68). "Near post" therefore means the taker's side, whichever flag the corner came from.
+- **Delivery zones** (end location): short or outside the box; six-yard box, near post / far post (split at the goal centre); penalty-spot area (central box outside the six-yard box); box, near side; box, far side (the wide parts of the box).
+- **Outcome:** shots, xG and goals of the **possession the corner starts** (same match, team and possession id, at or after the corner). Possession ids are StatsBomb-specific, so outcomes are **capability-gated**: without them, delivery zones still work and outcomes are "unavailable".
+- Team view: corners taken and conceded, against the league average per team-match. Aggregates only.
+
+## Validation (`.venv/bin/python scripts/validation/phase11_corners_validation.py`, 15,475 corners)
+
+- 5.21 corners per team per match. 34.9 % lead to a shot within the possession. 0.035 xG per corner. 514 goals.
+- By delivery zone: penalty-spot area 42.0 % of corners and the most productive (0.042 xG per corner, shot rate 44 %); near post 22.3 % (0.033); short or outside the box 17.9 % (0.026).
+- Face validity: West Bromwich Albion (Pulis) has the highest xG per corner in the Premier League (0.056, league 0.039), with 38 % of deliveries to the near post, consistent with its set-piece reputation and its Phase 8 set-piece share. Other league leaders: Eibar, PSG, Juventus.
+
+## Limitations
+
+- The possession outcome credits everything until possession changes, including second phases after a cleared corner.
+- xG per corner in rarely used zones rests on few corners, so the count is shown next to it.
+- Delivery type (inswinging/outswinging) is not in the canonical model.
