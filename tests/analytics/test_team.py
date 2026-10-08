@@ -88,3 +88,16 @@ def test_team_percentiles_are_computed_within_each_league():
     assert result.loc["liga2", "ppda_pct"] == pytest.approx(100.0)
     assert result.loc["pl0", "ppda_pct"] == pytest.approx(100 / 3)
     assert result.loc["pl0", "league_size"] == 3
+
+
+def test_defensive_height_and_high_ball_wins():
+    events = pd.DataFrame([
+        ev("interception", team="t1", start_x=80.0, start_y=34.0),                       # high ball win
+        ev("ball_recovery", team="t1", start_x=30.0, start_y=34.0),                      # deep ball win
+        ev("duel", team="t1", duel_kind="ground", outcome="fail", start_x=50.0, start_y=34.0),  # action, not a win
+    ], columns=list(TEAM_EVENT_COLUMNS))
+    team_match = team_match_stats(events, xg_frame([]), MATCHES)
+    possession = pd.DataFrame({"match_id": ["m1", "m1"], "team_id": ["t1", "t2"], "possession_pct": [50.0, 50.0]})
+    season = team_season_stats(team_match, CAPS, possession).set_index("team_id")
+    assert season.loc["t1", "defensive_height_m"] == pytest.approx((80 + 30 + 50) / 3)
+    assert season.loc["t1", "high_ball_wins_per_match"] == 1

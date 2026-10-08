@@ -27,7 +27,8 @@ from football_platform.database.migrate import apply_migrations
 from football_platform.reports.player_season_report import OUTPUT_DIR, load_capabilities, query_frame
 from football_platform.reports.snapshot import store_team_snapshot
 
-TEAM_EVENT_TYPES = [EventType.PASS, EventType.SHOT, EventType.DUEL, EventType.INTERCEPTION, EventType.FOUL_COMMITTED]
+TEAM_EVENT_TYPES = [EventType.PASS, EventType.SHOT, EventType.DUEL, EventType.INTERCEPTION, EventType.FOUL_COMMITTED,
+                    EventType.BALL_RECOVERY]
 
 
 @dataclass

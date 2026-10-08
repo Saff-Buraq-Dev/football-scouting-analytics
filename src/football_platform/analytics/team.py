@@ -21,6 +21,7 @@ from football_platform.canonical.models import SHOOTOUT_PERIOD
 PPDA_OPPONENT_ZONE_MAX_X = 0.6 * PITCH_LENGTH_M  # opponent's frame: passes before x = 63 m
 PPDA_DEFENSIVE_ZONE_MIN_X = 0.4 * PITCH_LENGTH_M  # defending team's frame: actions from x = 42 m
 # Throw-ins are excluded: most throw-in possessions become ordinary open play (Phase 8 validation).
+HIGH_BALL_WIN_MIN_X = PITCH_LENGTH_M * 2 / 3  # final third (70 m)
 SET_PIECE_ORIGINS = {PossessionOrigin.CORNER.value, PossessionOrigin.FREE_KICK.value}
 
 TEAM_EVENT_COLUMNS = (
@@ -86,6 +87,15 @@ def team_match_stats(events: pd.DataFrame, provider_metrics: pd.DataFrame, match
         | (ev["type"] == EventType.INTERCEPTION.value)
         | (ev["type"] == EventType.FOUL_COMMITTED.value)
     )
+    # Pressing (Phase 11.3): provider-independent defensive actions and ball wins.
+    pressing_action = defensive_action | (ev["type"] == EventType.BALL_RECOVERY.value)
+    ball_win = (
+        (((ev["type"] == EventType.DUEL.value) & (ev["duel_kind"] == DuelKind.GROUND.value))
+         & (ev["outcome"] == Outcome.SUCCESS.value))
+        | (ev["type"] == EventType.INTERCEPTION.value)
+        | ((ev["type"] == EventType.BALL_RECOVERY.value) & (ev["outcome"] == Outcome.SUCCESS.value))
+    )
+    located = ev["start_x"].notna()
     np_xg = shot_xg_values.where(np_shot, 0.0).fillna(0.0)
     origin = ev["possession_origin"]
 
@@ -104,6 +114,9 @@ def team_match_stats(events: pd.DataFrame, provider_metrics: pd.DataFrame, match
         # PPDA components, each in the acting team's frame:
         "passes_in_own_60": is_pass & (ev["start_x"] < PPDA_OPPONENT_ZONE_MAX_X),
         "defensive_actions_high": defensive_action & (ev["start_x"] >= PPDA_DEFENSIVE_ZONE_MIN_X),
+        "pressing_actions": pressing_action & located,
+        "pressing_x_sum": ev["start_x"].where(pressing_action & located, 0.0),
+        "high_ball_wins": ball_win & (ev["start_x"] >= HIGH_BALL_WIN_MIN_X),
     })
     own = per_event.groupby(["match_id", "team_id"]).sum().reset_index()
 
@@ -150,6 +163,8 @@ TEAM_METRICS: tuple[TeamMetric, ...] = (
     TeamMetric("crosses_per_match", "Open-play crosses per match"),
     TeamMetric("counter_npxg_share", "Share of npxG from counter-attacks", "has_possession_ids"),
     TeamMetric("set_piece_npxg_share", "Share of npxG from set pieces", "has_possession_ids"),
+    TeamMetric("defensive_height_m", "Defensive action height (m from own goal)"),
+    TeamMetric("high_ball_wins_per_match", "Ball wins in the final third per match"),
 )
 
 
@@ -169,6 +184,9 @@ def team_season_stats(team_match: pd.DataFrame, capabilities: ProviderCapabiliti
         counter_npxg=("counter_npxg", "sum"), set_piece_npxg=("set_piece_npxg", "sum"),
         opponent_passes_in_own_60=("opponent_passes_in_own_60", "sum"),
         defensive_actions_high=("defensive_actions_high", "sum"),
+        pressing_actions=("pressing_actions", "sum"),
+        pressing_x_sum=("pressing_x_sum", "sum"),
+        high_ball_wins=("high_ball_wins", "sum"),
         possession_pct=("possession_pct", "mean"),
     ).reset_index()
     n = sums["matches"]
@@ -188,6 +206,8 @@ def team_season_stats(team_match: pd.DataFrame, capabilities: ProviderCapabiliti
         crosses_per_match=sums["crosses"] / n,
         counter_npxg_share=sums["counter_npxg"] / safe(sums["npxg_for"]),
         set_piece_npxg_share=sums["set_piece_npxg"] / safe(sums["npxg_for"]),
+        defensive_height_m=sums["pressing_x_sum"] / safe(sums["pressing_actions"]),
+        high_ball_wins_per_match=sums["high_ball_wins"] / n,
     )
     for metric in TEAM_METRICS:
         if metric.capability and not getattr(capabilities, metric.capability):

@@ -94,3 +94,18 @@ def progression(events: pd.DataFrame) -> pd.DataFrame:
 def share(counts: np.ndarray) -> np.ndarray:
     total = counts.sum()
     return counts / total if total else counts
+
+
+def pressing_points(events: pd.DataFrame) -> dict[str, pd.DataFrame]:
+    """Team defensive actions and ball wins (Phase 11.3), provider-independent definitions.
+
+    events: type, outcome, duel_kind, period, start_x, start_y (acting team's frame).
+    """
+    ev = events[(events["period"] != SHOOTOUT_PERIOD) & events["start_x"].notna()]
+    ground_duel = (ev["type"] == EventType.DUEL.value) & (ev["duel_kind"] == "ground")
+    action = ground_duel | ev["type"].isin([EventType.INTERCEPTION.value, EventType.FOUL_COMMITTED.value,
+                                             EventType.BALL_RECOVERY.value])
+    win = ((ground_duel | (ev["type"] == EventType.BALL_RECOVERY.value)) & (ev["outcome"] == Outcome.SUCCESS.value)) \
+        | (ev["type"] == EventType.INTERCEPTION.value)
+    pick = lambda mask: ev.loc[mask, ["start_x", "start_y"]].rename(columns={"start_x": "x", "start_y": "y"})  # noqa: E731
+    return {"defensive_actions": pick(action), "ball_wins": pick(win)}
