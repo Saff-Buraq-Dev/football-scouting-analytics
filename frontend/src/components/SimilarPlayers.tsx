@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchSimilar, playerSeasonRef, type SimilarityResponse } from "../api";
-import { formatMinutes } from "../format";
+import { formatMinutes, inSentence } from "../format";
 
 /** "Players with a similar profile" section of the player page (Phase 9a, D022). */
 export function SimilarPlayers({ playerId, seasonId }: { playerId: string; seasonId: string }) {
@@ -27,7 +27,7 @@ export function SimilarPlayers({ playerId, seasonId }: { playerId: string; seaso
       <div style={{ padding: "16px 18px 6px" }}>
         <h2 className="section-title">Players with a similar profile</h2>
         <p className="theme-note">
-          Compared on {data.features.map((f) => f.label.toLowerCase()).join(", ")} among {data.population_size} ranked
+          Compared on {data.features.map((f) => inSentence(f.label)).join(", ")} among {data.population_size} ranked
           players of the same position group. {data.method_note}
         </p>
       </div>
@@ -56,7 +56,7 @@ export function SimilarPlayers({ playerId, seasonId }: { playerId: string; seaso
                 <span className="muted">of the group</span>
               </td>
               <td className="secondary">
-                {p.main_differences.map((d) => `${d.direction} ${d.label.toLowerCase()}`).join(", ")}
+                {p.main_differences.map((d) => `${d.direction} ${inSentence(d.label)}`).join(", ")}
               </td>
               <td>
                 <Link className="button small" to={`/compare?ps=${self}&ps=${playerSeasonRef(p.player_id, p.season_id)}`}>

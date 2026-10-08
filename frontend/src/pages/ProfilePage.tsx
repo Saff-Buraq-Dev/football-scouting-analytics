@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { fetchProfile, type Profile } from "../api";
 import { AllMetricsTable } from "../components/AllMetricsTable";
 import { MetricRow, ScaleLegend } from "../components/MetricRow";
+import { ArchetypeCard } from "../components/ArchetypeCard";
 import { PlayerShotMap } from "../components/PlayerShotMap";
 import { SimilarPlayers } from "../components/SimilarPlayers";
 import { ZoneMaps } from "../components/ZoneMaps";
@@ -111,6 +112,8 @@ export function ProfilePage() {
           </section>
         ))}
       </div>
+
+      <ArchetypeCard playerId={playerId} seasonId={seasonId} />
 
       <ZoneMaps playerId={playerId} seasonId={seasonId} />
 

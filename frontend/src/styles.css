@@ -429,3 +429,9 @@ details.all-metrics .table { margin-top: 10px; }
 /* Shot maps in half-width cards (team page): stack the pitch above the table. */
 .themes .shotmap-body { grid-template-columns: 1fr; }
 .themes .shotmap svg { max-width: 260px; margin: 0 auto; }
+
+/* ---- Archetypes ---------------------------------------------------------- */
+.archetype-head { display: flex; justify-content: space-between; align-items: baseline; }
+.archetype p { margin: 6px 0; }
+.archetype-type { padding: 10px 0; border-top: 1px solid var(--gridline); }
+.archetype-type:first-of-type { border-top: none; }

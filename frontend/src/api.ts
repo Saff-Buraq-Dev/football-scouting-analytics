@@ -446,3 +446,27 @@ export interface CornerReport {
 export function fetchTeamCorners(teamId: string, seasonId: string, signal?: AbortSignal) {
   return getJson<CornerReport>(`/api/teams/${teamId}/seasons/${seasonId}/corners`, signal);
 }
+
+export interface ArchetypeType {
+  index: number;
+  size: number;
+  more: string[];
+  less: string[];
+  prototypes: { player_id: string; season_id: string; name: string }[];
+}
+
+export interface PlayerArchetype {
+  position_group: string;
+  type: ArchetypeType;
+  also_close_to: ArchetypeType | null;
+  types_in_group: number;
+  note: string;
+}
+
+export function fetchArchetypes(signal?: AbortSignal) {
+  return getJson<{ groups: Record<string, ArchetypeType[]>; note: string }>("/api/archetypes", signal);
+}
+
+export function fetchPlayerArchetype(playerId: string, seasonId: string, signal?: AbortSignal) {
+  return getJson<PlayerArchetype>(`/api/players/${playerId}/seasons/${seasonId}/archetype`, signal);
+}

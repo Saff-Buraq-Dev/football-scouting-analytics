@@ -60,3 +60,14 @@ describe("formatTeamValue", () => {
     expect(formatTeamValue("ppda", null)).toBe("—");
   });
 });
+
+describe("inSentence", () => {
+  it("lower-cases ordinary labels but keeps acronyms", async () => {
+    const { inSentence } = await import("./format");
+    expect(inSentence("Key passes")).toBe("key passes");
+    expect(inSentence("Non-penalty xG")).toBe("non-penalty xG");
+    expect(inSentence("xA (derived)")).toBe("xA (derived)");
+    expect(inSentence("xT from passes")).toBe("xT from passes");
+    expect(inSentence("PPDA")).toBe("PPDA");
+  });
+});

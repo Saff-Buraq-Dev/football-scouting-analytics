@@ -98,3 +98,9 @@ export function formatTeamValue(key: string, value: number | null): string {
   if (key.endsWith("_diff_per_match") || key === "points_vs_expected") return `${value >= 0 ? "+" : ""}${value.toFixed(2)}`;
   return value.toFixed(2);
 }
+
+/** Label for use inside a sentence: lower-case the first letter, but keep acronyms ("xG", "xA", "PPDA"). */
+export function inSentence(label: string): string {
+  if (label.length < 2 || label[1] === label[1].toUpperCase()) return label;
+  return label[0].toLowerCase() + label.slice(1);
+}
