@@ -27,6 +27,7 @@ from football_platform.analytics.xt import XTModel
 from football_platform.api import repository
 from football_platform.api.comparison import MAX_PLAYERS, MIN_PLAYERS, build_comparison
 from football_platform.api.scouting import InvalidCriteriaError, build_scouting_result, parse_criteria, presets_payload
+from football_platform.api.board import board_router
 from football_platform.api.archetypes import overview as archetypes_overview
 from football_platform.api.archetypes import player_view as archetype_player_view
 from football_platform.api.corners import build_corner_report, season_corners
@@ -40,6 +41,7 @@ from football_platform.api.team import LABELS as TEAM_LABELS
 from football_platform.api.team import build_team_profile, team_list_item
 from football_platform.api.zones import build_zone_maps, map_counts
 from football_platform.api.zones import frame as zone_frame
+from football_platform.auth.providers import AuthProvider, provider_from_env
 from football_platform.database.connection import database_url
 
 # Vite dev server. A deployed frontend is served from the same origin.
@@ -62,19 +64,22 @@ def mount_frontend(app: FastAPI, dist: Path) -> None:
         return FileResponse(index)
 
 
-def create_app(db_url: str | None = None) -> FastAPI:
+def create_app(db_url: str | None = None, auth: AuthProvider | None = None) -> FastAPI:
     app = FastAPI(
         title="Football Scouting Analytics API",
         description="Player-season profiles built on StatsBomb Open Data. Derived metrics only.",
         version="0.1.0",
     )
-    app.add_middleware(CORSMiddleware, allow_origins=DEV_ORIGINS, allow_methods=["GET"], allow_headers=["*"])
+    app.add_middleware(CORSMiddleware, allow_origins=DEV_ORIGINS, allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+                       allow_headers=["*"])
 
     def connection() -> Iterator[psycopg.Connection]:
         with psycopg.connect(db_url or database_url(), autocommit=True) as conn:
             yield conn
 
     Conn = Annotated[psycopg.Connection, Depends(connection)]
+    # Personal features (recruitment board) behind a pluggable identity provider (D032).
+    app.include_router(board_router(auth or provider_from_env(), connection))
 
     @lru_cache(maxsize=16)
     def group_baseline(position_group: str) -> list[dict]:
