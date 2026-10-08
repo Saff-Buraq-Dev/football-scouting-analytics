@@ -325,3 +325,14 @@ def latest_xt_values(conn: psycopg.Connection) -> dict[str, Any] | None:
     rows = _rows(conn, """SELECT grid_columns, grid_rows, cell_values, actions, iterations
         FROM xt_models ORDER BY created_at DESC LIMIT 1""")
     return rows[0] if rows else None
+
+
+def season_corner_events(conn: psycopg.Connection, season_id: str) -> list[dict[str, Any]]:
+    """Corner passes and shots of a league-season (for corner outcomes, Phase 11.6)."""
+    return _rows(conn, """SELECT e.id, e.match_id, e.team_id, e.period, e.time_s, e.type, e.set_piece,
+               e.start_y, e.end_x, e.end_y, e.shot_outcome, e.possession_id, m.value AS xg,
+               mt.home_team_id, mt.away_team_id
+        FROM events e JOIN matches mt ON mt.id = e.match_id
+        LEFT JOIN provider_metrics m ON m.event_id = e.id AND m.metric_key = 'xg'
+        WHERE mt.season_id = %s AND (e.type = 'shot' OR (e.type = 'pass' AND e.set_piece = 'corner'))""",
+        (season_id,))

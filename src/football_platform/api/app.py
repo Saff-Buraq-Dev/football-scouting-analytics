@@ -27,6 +27,7 @@ from football_platform.analytics.xt import XTModel
 from football_platform.api import repository
 from football_platform.api.comparison import MAX_PLAYERS, MIN_PLAYERS, build_comparison
 from football_platform.api.scouting import InvalidCriteriaError, build_scouting_result, parse_criteria, presets_payload
+from football_platform.api.corners import build_corner_report, season_corners
 from football_platform.api.match import build_match_report
 from football_platform.api.pressing import build_pressing_maps
 from football_platform.api.pressing import counts as pressing_counts
@@ -180,6 +181,18 @@ def create_app(db_url: str | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="No analytics for this team and season")
         return build_pressing_maps(repository.team_pressing_events(conn, str(team_id), str(season_id)),
                                    league_pressing_counts(str(season_id)))
+
+    @lru_cache(maxsize=8)
+    def league_corners(season_id: str):
+        with psycopg.connect(db_url or database_url(), autocommit=True) as conn:
+            return season_corners(repository.season_corner_events(conn, season_id))
+
+    @app.get("/api/teams/{team_id}/seasons/{season_id}/corners")
+    def team_corners(conn: Conn, team_id: UUID, season_id: UUID) -> dict:
+        if repository.team_season(conn, str(team_id), str(season_id)) is None:
+            raise HTTPException(status_code=404, detail="No analytics for this team and season")
+        corners, pairs = league_corners(str(season_id))
+        return build_corner_report(corners, pairs, str(team_id))
 
     @app.get("/api/teams/{team_id}/seasons/{season_id}/shots")
     def team_shots(conn: Conn, team_id: UUID, season_id: UUID) -> dict:
