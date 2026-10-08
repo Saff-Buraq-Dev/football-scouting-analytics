@@ -1049,3 +1049,64 @@ Where does a team deliver its corners, how dangerous are they, and how dangerous
 - The possession outcome credits everything until possession changes, including second phases after a cleared corner.
 - xG per corner in rarely used zones rests on few corners, so the count is shown next to it.
 - Delivery type (inswinging/outswinging) is not in the canonical model.
+
+---
+
+# Phase 11.7 — Player archetypes
+
+Status: implemented (decision D030).
+
+## Football question
+
+> "What kinds of players exist in each position, and which kind is this one?"
+
+## The risk
+
+A clustering algorithm always returns groups, even on random data. A typology must therefore be shown to be **stable** before it is published, and types must not be given invented names.
+
+## Method
+
+| Element | Choice |
+|---|---|
+| Population | eligible players (≥ 900 min) of one position group, complete seasons; goalkeepers excluded (2 template count metrics) |
+| Features | regressed per-90 count metrics of the position template (the similarity features, Phase 9a) |
+| Representation | **profile shape**: z-scores against the group, then centred per player (each player's mean z subtracted). This removes overall activity level, so types describe *style*, not volume |
+| Algorithm | k-means, k-means++ initialisation, 20 restarts, fixed seed (deterministic) |
+| Choice of k | the k in 2–5 with the **highest half-season stability**: cluster first-half and second-half profiles independently and compute the adjusted Rand index (ARI) of the two partitions of the same players |
+| Publication rule | stability must exceed the 99th percentile of a permutation null (second-half labels shuffled across players) |
+| Description | no hand-made names: each type shows its 3 most over-represented and 2 most under-represented metrics (centroid), and its 5 most typical players (closest to the centroid) |
+| Assignment | every player of the group gets the nearest type. If the second-nearest is within 15 % of the nearest distance, he is shown as "between two types" (display convention) |
+
+## Validation (`cd scripts/validation && ../../.venv/bin/python phase11_archetype_validation.py`)
+
+**Raw z-scores split on volume:** at k = 2 the two centroids differ by 0.6–0.9 SD in mean z, so the dominant split is "more active vs less active". This is why profile shapes are used.
+
+Half-season stability (ARI) on profile shapes, with the permutation null's 99th percentile:
+
+| Group (n) | k = 2 | k = 3 | k = 4 | k = 5 | Chosen |
+|---|---|---|---|---|---|
+| Centre-back (206) | **0.24** (0.02) | 0.22 (0.03) | 0.13 | 0.11 | 2 |
+| Full-back (184) | **0.22** (0.02) | 0.18 (0.02) | 0.14 | 0.09 | 2 |
+| Central midfield (226) | **0.34** (0.02) | 0.28 (0.03) | 0.20 | 0.21 | 2 |
+| Attacking mid / winger (167) | **0.33** (0.02) | 0.27 (0.02) | 0.28 | 0.27 | 2 |
+| Striker (120) | 0.01 (0.03) | **0.24** (0.03) | 0.14 | 0.22 | 3 |
+
+All chosen typologies are far above chance, but **only moderately stable** (ARI 0.22–0.34): players move between types from one half-season to the next. Types are presented as **tendencies**. 16 % of players (332 / 2,031) are flagged as between two types.
+
+**Types found (full season):**
+
+| Group | Type: more … → typical players |
+|---|---|
+| Centre-back | aerial duels, interceptions, tackles → Ogbonna, Spolli · xT from passes, progressive passes → Kompany, Moisander, Astori |
+| Full-back | tackles, interceptions, pressures → Palmieri, Ward · xT from passes, key passes, xA → Ben Davies, Bertrand, De Sciglio |
+| Central midfield | tackles, interceptions, pressures → Mikel, Gary O'Neil · key passes, xA, xT from passes → Guarín, Dorrans, Charlie Adam |
+| Attacking mid / winger | pressures, tackles, passes into final third → Honda, Iago Falqué · npxG, xT from carries, goals → Chadli, Bolasie, Pedro |
+| Striker | aerials, pressures, npxG → Rondón, Papiss Cissé, Wickham · progressive carries, xT from carries, key passes → Muriel, Morata · npxG, goals, shots → Vardy, Rubén Castro, Ben Yedder |
+
+These match recognisable football roles (stopper vs ball-playing centre-back, ball-winner vs creator, target man vs finisher). The names in this sentence are interpretation; the application shows only the computed descriptions and examples.
+
+## Limitations
+
+- Moderate stability: a type is a tendency over one season, not a fixed label.
+- Shapes ignore volume by design. Combine with percentiles to judge level.
+- k is small (2–3) because finer typologies were less stable in this data. More seasons could support finer types.

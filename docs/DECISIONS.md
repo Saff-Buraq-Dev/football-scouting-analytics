@@ -55,6 +55,7 @@ Consequences:
 | D027 | Pressing metrics and maps from provider-independent defensive events | Accepted |
 | D028 | Match pages: binned xG race, stored xT model, networks until the first change | Accepted |
 | D029 | Corner analysis: taker-relative delivery zones, possession outcomes | Accepted |
+| D030 | Player archetypes: shape-based k-means, k chosen by half-season stability, no invented names | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -625,3 +626,21 @@ Reason: Taker-relative zones match coaching language (near post / far post). Pos
 Alternatives considered: the first touch only (misses second balls); delivery technique (not in the canonical model); free kicks (heterogeneous, from anywhere on the pitch; a separate analysis later).
 
 Consequences: Outcomes need possession ids (capability-gated). Rare zones are shown with their counts.
+
+---
+
+### Decision D030 — Player archetypes
+
+Date: 2026-10-08
+
+Status: Accepted
+
+Context: Scouts think in player types. Clustering always produces groups, so a typology must be shown to be real and must not carry invented names (CLAUDE.md).
+
+Decision: k-means on regressed profile **shapes** (z-scores centred per player) within each outfield position group. k is chosen per group by half-season stability (ARI), and a typology is published only above a permutation null. Types are described by their over- and under-represented metrics and their most typical players. Models and assignments are stored by the player report (migration 0008). A profile card shows the player's type ("between two types" when ambiguous) and an Archetypes page lists all types.
+
+Reason: Raw z-scores split mostly on activity volume (0.6–0.9 SD). Shapes isolate style. The stability test and the null make the typology falsifiable.
+
+Alternatives considered: raw z-scores (volume split); Gaussian mixtures (more parameters, unstable with 120–300 players); hierarchical clustering (no clear gain); hand-named roles (invented methodology).
+
+Consequences: Typologies are coarse (2 types, 3 for strikers) and only moderately stable (ARI 0.22–0.34). The interface presents them as tendencies. Goalkeepers are not typed.
