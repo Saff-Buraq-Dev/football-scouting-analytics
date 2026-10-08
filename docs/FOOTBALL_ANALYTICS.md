@@ -1110,3 +1110,59 @@ These match recognisable football roles (stopper vs ball-playing centre-back, ba
 - Moderate stability: a type is a tendency over one season, not a fixed label.
 - Shapes ignore volume by design. Combine with percentiles to judge level.
 - k is small (2–3) because finer typologies were less stable in this data. More seasons could support finer types.
+
+---
+
+# Phase 11.8 — One-page scouting report (PDF)
+
+Status: implemented (decision D031).
+
+## Football question
+
+> "Can I hand a colleague one page that tells them who this player is, what the data says, and how far to trust it?"
+
+A scouting report is read in a minute, often on paper. It must show the essentials without the interactive layers (tooltips, tabs) that explain them on screen. So every caveat the profile explains on hover has to be written on the page.
+
+## Content (A4 portrait, one page)
+
+| Block | Source | Why |
+|---|---|---|
+| Header: competition, season, team, nationality, main role (share of minutes), minutes, appearances (starts), team possession | profile | sample size and context first |
+| Profile type, with its computed description and 3 typical players; "between two types" if ambiguous | Phase 11.7 | what kind of player, in words that come from the data |
+| Highest / lowest percentiles | rule below | the one-glance summary |
+| All template percentiles by theme, value per 90, low reliability greyed | Phase 5 | the evidence behind the summary |
+| Touch zone map (share of touches) | Phase 11.2 | where he plays |
+| Shot zones (outfield players with shots) | Phase 9b | where he shoots from |
+| 5 most similar profiles with their main differences | Phase 9a | comparables for the recruitment conversation |
+| Footer: how to read percentiles and reliability, method link, generation date, StatsBomb attribution | D004 | the page must stand alone |
+
+## Highlight rule
+
+1. Candidates: the position template's metrics that have a percentile and a reliability of at least "medium" (regressed weight w ≥ 0.5). Ratios have no reliability estimate and are not candidates.
+2. With at least 6 candidates: the 3 highest and the 3 lowest percentiles. With fewer (goalkeepers have 2 count metrics), the candidates are listed once, highest first, because a split would put low percentiles under "highest".
+3. Low-reliability metrics that were left out are named on the page.
+4. The lists are labelled "highest / lowest percentiles", not "strengths / weaknesses", and no threshold is applied: a 60th percentile can be a player's highest. A percentile describes a season, not quality (Phase 4).
+
+## Validation (`cd scripts/validation && ../../.venv/bin/python phase11_report_validation.py`)
+
+Highlights chosen on the first half of the season, read in the second half (977 players with ≥ 450 min in each half):
+
+| Check | Result |
+|---|---|
+| Players with a split summary / single ranked list | 885 / 90 |
+| First-half "highest" percentiles: second-half median | **72**; ≥ 50th for 74 % |
+| First-half "lowest" percentiles: second-half median | **31**; < 50th for 72 % |
+| First-half percentile ≥ 80, reliability ≥ medium: still ≥ 50th | **89 %** (n = 1,792) |
+| First-half percentile ≥ 80, low reliability: still ≥ 50th | **67 %** (n = 195) |
+
+The highlights mostly hold. The reliability filter does real work: high percentiles on low-reliability metrics are much less likely to persist, as in Phase 6 (88–94 % vs 56–67 %). On the full season, reliability is higher than in these half-seasons, so this is a conservative test.
+
+## PDF generation
+
+The report is a page of the web app (`/players/{id}/seasons/{id}/report`) with a print stylesheet: A4, 10 mm margins, app navigation hidden, light theme forced, colours kept. "Download PDF" opens the browser's print dialog ("Save as PDF"). The suggested file name is the page title (`Scouting report - <player> - <competition> <season>`). Verified one page with headless Chrome for a striker, a centre-back, a full-back and a goalkeeper.
+
+## Limitations
+
+- The PDF is produced by the browser. Layout was tested with Chrome; other browsers may paginate slightly differently.
+- No age, contract, market value or injury history: not in the data (Phase 1).
+- No scout's notes yet: they come with the recruitment board (Phase 11.9).

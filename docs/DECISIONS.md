@@ -56,6 +56,7 @@ Consequences:
 | D028 | Match pages: binned xG race, stored xT model, networks until the first change | Accepted |
 | D029 | Corner analysis: taker-relative delivery zones, possession outcomes | Accepted |
 | D030 | Player archetypes: shape-based k-means, k chosen by half-season stability, no invented names | Accepted |
+| D031 | One-page scouting report: print-styled web page, PDF via the browser; reliability-filtered highlights | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -644,3 +645,21 @@ Reason: Raw z-scores split mostly on activity volume (0.6–0.9 SD). Shapes isol
 Alternatives considered: raw z-scores (volume split); Gaussian mixtures (more parameters, unstable with 120–300 players); hierarchical clustering (no clear gain); hand-named roles (invented methodology).
 
 Consequences: Typologies are coarse (2 types, 3 for strikers) and only moderately stable (ARI 0.22–0.34). The interface presents them as tendencies. Goalkeepers are not typed.
+
+---
+
+### Decision D031 — One-page scouting report
+
+Date: 2026-10-08
+
+Status: Accepted
+
+Context: Scouts share players as one-page PDFs. The report must reuse the platform's validated content and keep its caveats on paper.
+
+Decision: The report is a page of the web app with a print stylesheet (A4 portrait). The browser makes the PDF ("Save as PDF"). The pitch drawings are shared with the profile (`ZonePitch`, `ShotZonePitch`), not re-implemented. The summary lists the 3 highest and 3 lowest percentiles among template metrics of at least medium reliability (one ranked list when there are fewer than 6), computed in `api/report.py` and returned with the profile.
+
+Reason: No new server dependency (WeasyPrint or a headless browser in the image would add system libraries and hundreds of MB) and one source of truth for the drawings. The reliability filter is validated: high percentiles persist in 89 % of cases with reliability ≥ medium, against 67 % with low reliability.
+
+Alternatives considered: server-side PDF with WeasyPrint/ReportLab (second rendering of every chart, heavy image); a headless Chrome service (extra infrastructure, against the modular-monolith rule); "strengths / weaknesses" with a percentile threshold (an invented cut-off and a quality judgement that percentiles do not support).
+
+Consequences: PDF output depends on the user's browser (tested with Chrome). A scheduled or batch PDF export would need a server-side renderer later.
