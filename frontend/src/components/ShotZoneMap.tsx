@@ -52,7 +52,6 @@ interface Props {
 
 /** Shot zones shaded by share of shots (single hue, opacity = magnitude), with a table equivalent. */
 export function ShotZoneMap({ title, view, baselineLabel }: Props) {
-  const maxShare = Math.max(...view.zones.map((z) => z.share), 0.01);
   return (
     <section className="card shotmap">
       <h2 className="section-title">{title}</h2>
@@ -62,31 +61,7 @@ export function ShotZoneMap({ title, view, baselineLabel }: Props) {
         shots; aggregated by zone (individual shots are not shown).
       </p>
       <div className="shotmap-body">
-        <svg viewBox={`-4 -4 ${WIDTH_M * SCALE + 8} ${(105 - HALF) * SCALE + 8}`} role="img"
-          aria-label={`${title}: share of shots by zone`}>
-          {view.zones.map((zone) => (
-            <g key={zone.key}>
-              <title>{`${zone.label}: ${zone.shots} shots, ${zone.goals} goals, ${Math.round(zone.share * 100)}% of shots (${baselineLabel}: ${Math.round(zone.baseline_share * 100)}%)`}</title>
-              {zoneRects(zone.key).map((r, i) => (
-                <rect key={i} {...r} className="zone" style={{ fillOpacity: 0.06 + 0.84 * (zone.share / maxShare) }} />
-              ))}
-            </g>
-          ))}
-          {/* Pitch markings on top of the fills */}
-          <rect className="line" x={0} y={0} width={WIDTH_M * SCALE} height={(105 - HALF) * SCALE} />
-          <rect className="line" x={svgX(34 + BOX_HALF)} y={0} width={2 * BOX_HALF * SCALE} height={(105 - BOX_X) * SCALE} />
-          <rect className="line" x={svgX(34 + GOAL_HALF)} y={0} width={2 * GOAL_HALF * SCALE} height={(105 - SIX_X) * SCALE} />
-          <line className="goal" x1={svgX(34 + 3.66)} x2={svgX(34 - 3.66)} y1={0} y2={0} />
-          {view.zones.filter((z) => z.shots > 0 && z.key !== "outside_wide").map((zone) => {
-            const p = labelPosition(zone.key);
-            return (
-              <text key={zone.key} className="zone-label" x={p.x} y={p.y} textAnchor="middle">
-                <tspan x={p.x} dy="-0.2em">{Math.round(zone.share * 100)}%</tspan>
-                <tspan x={p.x} dy="1.2em" className="zone-sub">{zone.goals}/{zone.shots}</tspan>
-              </text>
-            );
-          })}
-        </svg>
+        <ShotZonePitch title={title} view={view} baselineLabel={baselineLabel} />
         <table className="table compact">
           <thead>
             <tr><th>Zone</th><th className="num">Shots</th><th className="num">Goals</th><th className="num">npxG/shot</th><th className="num">Share</th><th className="num">vs {baselineLabel}</th></tr>
@@ -106,5 +81,37 @@ export function ShotZoneMap({ title, view, baselineLabel }: Props) {
         </table>
       </div>
     </section>
+  );
+}
+
+/** The half-pitch drawing of shot zones, shared by the profile and the printable report. */
+export function ShotZonePitch({ title, view, baselineLabel }: Props) {
+  const maxShare = Math.max(...view.zones.map((z) => z.share), 0.01);
+  return (
+    <svg viewBox={`-4 -4 ${WIDTH_M * SCALE + 8} ${(105 - HALF) * SCALE + 8}`} role="img"
+      aria-label={`${title}: share of shots by zone`}>
+      {view.zones.map((zone) => (
+        <g key={zone.key}>
+          <title>{`${zone.label}: ${zone.shots} shots, ${zone.goals} goals, ${Math.round(zone.share * 100)}% of shots (${baselineLabel}: ${Math.round(zone.baseline_share * 100)}%)`}</title>
+          {zoneRects(zone.key).map((r, i) => (
+            <rect key={i} {...r} className="zone" style={{ fillOpacity: 0.06 + 0.84 * (zone.share / maxShare) }} />
+          ))}
+        </g>
+      ))}
+      {/* Pitch markings on top of the fills */}
+      <rect className="line" x={0} y={0} width={WIDTH_M * SCALE} height={(105 - HALF) * SCALE} />
+      <rect className="line" x={svgX(34 + BOX_HALF)} y={0} width={2 * BOX_HALF * SCALE} height={(105 - BOX_X) * SCALE} />
+      <rect className="line" x={svgX(34 + GOAL_HALF)} y={0} width={2 * GOAL_HALF * SCALE} height={(105 - SIX_X) * SCALE} />
+      <line className="goal" x1={svgX(34 + 3.66)} x2={svgX(34 - 3.66)} y1={0} y2={0} />
+      {view.zones.filter((z) => z.shots > 0 && z.key !== "outside_wide").map((zone) => {
+        const p = labelPosition(zone.key);
+        return (
+          <text key={zone.key} className="zone-label" x={p.x} y={p.y} textAnchor="middle">
+            <tspan x={p.x} dy="-0.2em">{Math.round(zone.share * 100)}%</tspan>
+            <tspan x={p.x} dy="1.2em" className="zone-sub">{zone.goals}/{zone.shots}</tspan>
+          </text>
+        );
+      })}
+    </svg>
   );
 }
