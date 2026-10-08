@@ -250,3 +250,17 @@ def group_zone_events(conn: psycopg.Connection, position_group: str) -> list[dic
 def group_passes_received(conn: psycopg.Connection, position_group: str) -> list[dict[str, Any]]:
     return _rows(conn, f"""SELECT {ZONE_EVENT_COLUMNS} FROM events e JOIN matches mt ON mt.id = e.match_id
         {GROUP_SEASONS.format(player="e.pass_recipient_id")} AND e.type = 'pass'""", (position_group,))
+
+
+PRESSING_TYPES = ["duel", "interception", "foul_committed", "ball_recovery"]
+PRESSING_COLUMNS = "e.type, e.outcome, e.duel_kind, e.period, e.start_x, e.start_y"
+
+
+def team_pressing_events(conn: psycopg.Connection, team_id: str, season_id: str) -> list[dict[str, Any]]:
+    return _rows(conn, f"""SELECT {PRESSING_COLUMNS} FROM events e JOIN matches mt ON mt.id = e.match_id
+        WHERE e.team_id = %s AND mt.season_id = %s AND e.type = ANY(%s)""", (team_id, season_id, PRESSING_TYPES))
+
+
+def league_pressing_events(conn: psycopg.Connection, season_id: str) -> list[dict[str, Any]]:
+    return _rows(conn, f"""SELECT {PRESSING_COLUMNS} FROM events e JOIN matches mt ON mt.id = e.match_id
+        WHERE mt.season_id = %s AND e.type = ANY(%s)""", (season_id, PRESSING_TYPES))

@@ -10,11 +10,13 @@ from football_platform.api.profile import DATA_SOURCE
 LABELS = {m.key: m.label for m in TEAM_METRICS}
 RESULTS_METRICS = ("points_per_match", "xpts_per_match", "goal_diff_per_match", "npxg_diff_per_match",
                    "npxg_for_per_match", "npxg_against_per_match")
-STYLE_METRICS = ("possession_pct", "ppda", "long_pass_share", "progressive_pass_share", "crosses_per_match",
-                 "counter_npxg_share", "set_piece_npxg_share", "npxg_per_shot_for", "npxg_per_shot_against")
+STYLE_METRICS = ("possession_pct", "ppda", "defensive_height_m", "high_ball_wins_per_match", "long_pass_share",
+                 "progressive_pass_share", "crosses_per_match", "counter_npxg_share", "set_piece_npxg_share",
+                 "npxg_per_shot_for", "npxg_per_shot_against")
 NOTES = {
     "ppda": "Lower = more intense pressing (fewer opponent passes allowed per defensive action).",
     "npxg_against_per_match": "Lower = fewer chances conceded.",
+    "defensive_height_m": "Mean distance from own goal of tackles, interceptions, recoveries and fouls: higher = defends further up.",
     "npxg_per_shot_against": "Lower = opponents get worse chances.",
     "set_piece_npxg_share": "Possessions starting from corners and free kicks; includes restarts that become open play.",
 }

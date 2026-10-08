@@ -25,6 +25,8 @@ from football_platform.analytics.similarity import similarity_features
 from football_platform.api import repository
 from football_platform.api.comparison import MAX_PLAYERS, MIN_PLAYERS, build_comparison
 from football_platform.api.scouting import InvalidCriteriaError, build_scouting_result, parse_criteria, presets_payload
+from football_platform.api.pressing import build_pressing_maps
+from football_platform.api.pressing import counts as pressing_counts
 from football_platform.api.profile import DATA_SOURCE, build_profile
 from football_platform.api.shots import player_shot_map, team_shot_map
 from football_platform.api.similarity import SimilarityUnavailableError, build_similarity
@@ -163,6 +165,18 @@ def create_app(db_url: str | None = None) -> FastAPI:
             repository.passes_received(conn, str(player_id), str(season_id)),
             baseline, group,
         )
+
+    @lru_cache(maxsize=8)
+    def league_pressing_counts(season_id: str) -> dict:
+        with psycopg.connect(db_url or database_url(), autocommit=True) as conn:
+            return pressing_counts(repository.league_pressing_events(conn, season_id))
+
+    @app.get("/api/teams/{team_id}/seasons/{season_id}/pressing")
+    def team_pressing(conn: Conn, team_id: UUID, season_id: UUID) -> dict:
+        if repository.team_season(conn, str(team_id), str(season_id)) is None:
+            raise HTTPException(status_code=404, detail="No analytics for this team and season")
+        return build_pressing_maps(repository.team_pressing_events(conn, str(team_id), str(season_id)),
+                                   league_pressing_counts(str(season_id)))
 
     @app.get("/api/teams/{team_id}/seasons/{season_id}/shots")
     def team_shots(conn: Conn, team_id: UUID, season_id: UUID) -> dict:
