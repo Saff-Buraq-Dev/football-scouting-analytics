@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { fetchTeamProfile, fetchTeamShots, type ShotZonesView, type TeamMetricRow, type TeamProfile } from "../api";
+import { CornersPanel } from "../components/CornersPanel";
 import { PressingMaps } from "../components/PressingMaps";
 import { ShotZoneMap } from "../components/ShotZoneMap";
 import { TeamResults } from "../components/TeamResults";
@@ -88,6 +89,8 @@ export function TeamProfilePage() {
       <TeamResults teamId={teamId} seasonId={seasonId} />
 
       <PressingMaps teamId={teamId} seasonId={seasonId} />
+
+      <CornersPanel teamId={teamId} seasonId={seasonId} />
 
       {shots && (
         <div className="themes" style={{ marginTop: 18 }}>

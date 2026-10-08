@@ -426,3 +426,23 @@ export function fetchMatches(seasonId: string, teamId?: string, signal?: AbortSi
 export function fetchMatchReport(matchId: string, signal?: AbortSignal) {
   return getJson<MatchReport>(`/api/matches/${matchId}`, signal);
 }
+
+export interface CornerSummary {
+  corners: number;
+  per_match: number | null;
+  xg_per_corner: number | null;
+  shot_rate: number | null;
+  goals: number | null;
+  zones: { key: string; label: string; corners: number; share: number; xg_per_corner: number | null; shot_rate: number | null }[];
+}
+
+export interface CornerReport {
+  for: CornerSummary;
+  against: CornerSummary;
+  league: CornerSummary;
+  notes: { zones: string; outcome: string };
+}
+
+export function fetchTeamCorners(teamId: string, seasonId: string, signal?: AbortSignal) {
+  return getJson<CornerReport>(`/api/teams/${teamId}/seasons/${seasonId}/corners`, signal);
+}
