@@ -19,7 +19,8 @@ import psycopg
 
 from football_platform.analytics.definitions import DEFAULT_MIN_MINUTES
 from football_platform.analytics.percentiles import add_percentiles
-from football_platform.analytics.player_match import EVENT_COLUMNS, player_match_stats
+from football_platform.analytics.player_match import EVENT_COLUMNS, player_match_stats, shot_xg
+from football_platform.analytics.xt import fit_xt
 from football_platform.analytics.player_season import player_season_stats
 from football_platform.analytics.possession import team_match_possession
 from football_platform.analytics.shrinkage import add_regressed_estimates
@@ -27,7 +28,7 @@ from football_platform.canonical.capabilities import ProviderCapabilities
 from football_platform.canonical.enums import CoverageScope, EventType
 from football_platform.database.connection import connect
 from football_platform.database.migrate import apply_migrations
-from football_platform.reports.snapshot import store_snapshot
+from football_platform.reports.snapshot import store_snapshot, store_xt_model
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 OUTPUT_DIR = PROJECT_ROOT / "data" / "analytics"
@@ -100,14 +101,18 @@ def load_inputs(conn: psycopg.Connection) -> ReportInputs:
     )
 
 
-def compute(inputs: ReportInputs, min_minutes: float, match_ids: set[str] | None = None) -> pd.DataFrame:
+def compute(inputs: ReportInputs, min_minutes: float, match_ids: set[str] | None = None,
+            xt_models: list | None = None) -> pd.DataFrame:
     """Analytics pipeline on loaded inputs, optionally restricted to a subset of matches."""
     events, appearances, spells = inputs.events, inputs.appearances, inputs.spells
     if match_ids is not None:
         events = events[events["match_id"].isin(match_ids)]
         appearances = appearances[appearances["match_id"].isin(match_ids)]
         spells = spells[spells["match_id"].isin(match_ids)]
-    per_match = player_match_stats(events, inputs.metrics, spells, inputs.matches)
+    xt_model = fit_xt(events, shot_xg(inputs.metrics))
+    if xt_models is not None:
+        xt_models.append(xt_model)  # lets the caller store the fitted surface
+    per_match = player_match_stats(events, inputs.metrics, spells, inputs.matches, xt_model)
     possession = team_match_possession(events)
     per_season = player_season_stats(
         per_match, appearances, spells, inputs.matches, inputs.capabilities, possession, min_minutes
@@ -117,9 +122,9 @@ def compute(inputs: ReportInputs, min_minutes: float, match_ids: set[str] | None
     return add_regressed_estimates(add_percentiles(per_season, seasons, complete), seasons, complete)
 
 
-def build_report(conn: psycopg.Connection, min_minutes: float) -> pd.DataFrame:
+def build_report(conn: psycopg.Connection, min_minutes: float, fitted_models: list | None = None) -> pd.DataFrame:
     inputs = load_inputs(conn)
-    report = compute(inputs, min_minutes)
+    report = compute(inputs, min_minutes, xt_models=fitted_models)
     players = query_frame(conn, "SELECT id AS player_id, coalesce(known_name, name) AS player FROM players")
     teams = query_frame(conn, "SELECT id, name FROM teams").set_index("id")["name"]
     report = report.merge(players, on="player_id").merge(
@@ -159,9 +164,11 @@ def main() -> None:
     # Autocommit: each `conn.transaction()` block is then an independent transaction.
     with connect(autocommit=True) as conn:
         apply_migrations(conn)
-        report = build_report(conn, args.min_minutes)
+        models: list = []
+        report = build_report(conn, args.min_minutes, models)
         run_id = None
         if not args.no_store:
+            store_xt_model(conn, models[0])
             run_id = store_snapshot(
                 conn, report, args.min_minutes, sorted(report["population_seasons"].iloc[0].split(",")),
                 report["source_provider"].iloc[0],

@@ -32,6 +32,12 @@ class XTModel:
     def matrix(self) -> np.ndarray:
         return self.grid.to_matrix(self.values)
 
+    @classmethod
+    def from_values(cls, grid: Grid, values: np.ndarray, actions: int = 0, iterations: int = 0) -> "XTModel":
+        """Rebuild a stored model for valuing actions (only the cell values are needed)."""
+        empty = np.zeros(grid.cells)
+        return cls(grid, np.asarray(values, dtype=float), empty, empty, empty, iterations, actions)
+
 
 def _open_play(events: pd.DataFrame) -> pd.DataFrame:
     return events[(events["period"] != SHOOTOUT_PERIOD) & events["set_piece"].isna()]

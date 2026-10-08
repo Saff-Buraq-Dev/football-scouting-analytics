@@ -10,6 +10,7 @@ import pandas as pd
 import psycopg
 
 from football_platform.analytics.definitions import ALL_METRICS, MetricKind, MetricSpec
+from football_platform.analytics.xt import XTModel
 
 PLAYER_SEASON_COLUMNS = [
     "player_id", "season_id", "analytics_run_id", "team_ids", "minutes", "appearances", "starts",
@@ -69,6 +70,18 @@ def store_snapshot(conn: psycopg.Connection, report: pd.DataFrame, min_minutes: 
                 for metric in ALL_METRICS:
                     copy.write_row(metric_row(row, metric))
     return run_id
+
+
+def store_xt_model(conn: psycopg.Connection, model: XTModel) -> str:
+    """Store a fitted xT surface (Phase 11.1). Returns its id; the latest one is used by the API."""
+    model_id = str(uuid.uuid4())
+    conn.execute(
+        """INSERT INTO xt_models (id, grid_columns, grid_rows, cell_values, actions, iterations)
+           VALUES (%s, %s, %s, %s, %s, %s)""",
+        (model_id, model.grid.columns, model.grid.rows, [float(v) for v in model.values], model.actions,
+         model.iterations),
+    )
+    return model_id
 
 
 def store_team_snapshot(conn: psycopg.Connection, report: pd.DataFrame) -> int:
