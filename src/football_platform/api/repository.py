@@ -264,3 +264,64 @@ def team_pressing_events(conn: psycopg.Connection, team_id: str, season_id: str)
 def league_pressing_events(conn: psycopg.Connection, season_id: str) -> list[dict[str, Any]]:
     return _rows(conn, f"""SELECT {PRESSING_COLUMNS} FROM events e JOIN matches mt ON mt.id = e.match_id
         WHERE mt.season_id = %s AND e.type = ANY(%s)""", (season_id, PRESSING_TYPES))
+
+
+MATCH_SELECT = """
+    SELECT m.id, m.season_id, m.match_date, m.matchweek, m.stage, m.venue, m.referee,
+           m.home_team_id, ht.name AS home_team, m.away_team_id, at.name AS away_team,
+           m.home_score, m.away_score, c.name AS competition, s.label AS season_label
+    FROM matches m
+    JOIN teams ht ON ht.id = m.home_team_id
+    JOIN teams at ON at.id = m.away_team_id
+    JOIN seasons s ON s.id = m.season_id
+    JOIN competitions c ON c.id = s.competition_id"""
+
+
+def matches_list(conn: psycopg.Connection, season_id: str | None, team_id: str | None) -> list[dict[str, Any]]:
+    conditions, params = [], []
+    if season_id:
+        conditions.append("m.season_id = %s")
+        params.append(season_id)
+    if team_id:
+        conditions.append("(m.home_team_id = %s OR m.away_team_id = %s)")
+        params += [team_id, team_id]
+    where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    return _rows(conn, f"{MATCH_SELECT} {where} ORDER BY m.match_date, ht.name LIMIT 500", params)
+
+
+def match_row(conn: psycopg.Connection, match_id: str) -> dict[str, Any] | None:
+    rows = _rows(conn, f"{MATCH_SELECT} WHERE m.id = %s", (match_id,))
+    return rows[0] if rows else None
+
+
+MATCH_EVENT_COLUMNS = (
+    "id, match_id, period, time_s, team_id, player_id, type, outcome, start_x, start_y, end_x, end_y, set_piece, "
+    "duel_kind, aerial_won, shot_outcome, pass_is_shot_assist, pass_is_goal_assist, pass_assisted_shot_event_id, "
+    "goalkeeper_action_kind, possession_origin, pass_is_cross, pass_recipient_id, card_type"
+)
+
+
+def match_events(conn: psycopg.Connection, match_id: str) -> list[dict[str, Any]]:
+    return _rows(conn, f"SELECT {MATCH_EVENT_COLUMNS} FROM events WHERE match_id = %s", (match_id,))
+
+
+def match_metrics(conn: psycopg.Connection, match_id: str) -> list[dict[str, Any]]:
+    return _rows(conn, """SELECT event_id, metric_key, value, source_provider, model_version
+        FROM provider_metrics WHERE match_id = %s""", (match_id,))
+
+
+def match_appearances(conn: psycopg.Connection, match_id: str) -> list[dict[str, Any]]:
+    return _rows(conn, """SELECT a.match_id, a.team_id, a.player_id, a.is_starter, a.minutes_played, a.shirt_number,
+               coalesce(p.known_name, p.name) AS player_name
+        FROM appearances a JOIN players p ON p.id = a.player_id WHERE a.match_id = %s""", (match_id,))
+
+
+def match_spells(conn: psycopg.Connection, match_id: str) -> list[dict[str, Any]]:
+    return _rows(conn, """SELECT match_id, team_id, player_id, period, start_s, end_s, role
+        FROM position_spells WHERE match_id = %s""", (match_id,))
+
+
+def latest_xt_values(conn: psycopg.Connection) -> dict[str, Any] | None:
+    rows = _rows(conn, """SELECT grid_columns, grid_rows, cell_values, actions, iterations
+        FROM xt_models ORDER BY created_at DESC LIMIT 1""")
+    return rows[0] if rows else None

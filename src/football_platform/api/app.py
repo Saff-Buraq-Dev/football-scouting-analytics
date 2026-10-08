@@ -21,10 +21,13 @@ from fastapi.staticfiles import StaticFiles
 
 from football_platform.analytics.definitions import ALL_METRICS, PositionGroup
 from football_platform.analytics.scouting import DEFAULT_NEAR_MISS_POINTS
+from football_platform.analytics.pitch_grid import Grid
 from football_platform.analytics.similarity import similarity_features
+from football_platform.analytics.xt import XTModel
 from football_platform.api import repository
 from football_platform.api.comparison import MAX_PLAYERS, MIN_PLAYERS, build_comparison
 from football_platform.api.scouting import InvalidCriteriaError, build_scouting_result, parse_criteria, presets_payload
+from football_platform.api.match import build_match_report
 from football_platform.api.pressing import build_pressing_maps
 from football_platform.api.pressing import counts as pressing_counts
 from football_platform.api.profile import DATA_SOURCE, build_profile
@@ -184,6 +187,24 @@ def create_app(db_url: str | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="No analytics for this team and season")
         shots_for, shots_against = repository.team_shots(conn, str(team_id), str(season_id))
         return team_shot_map(shots_for, shots_against, repository.league_shots(conn, str(season_id)))
+
+    @app.get("/api/matches")
+    def matches(conn: Conn, season_id: UUID | None = None, team_id: UUID | None = None) -> dict:
+        rows = repository.matches_list(conn, str(season_id) if season_id else None, str(team_id) if team_id else None)
+        return {"matches": rows, "data_source": DATA_SOURCE}
+
+    @app.get("/api/matches/{match_id}")
+    def match_report(conn: Conn, match_id: UUID) -> dict:
+        match = repository.match_row(conn, str(match_id))
+        if match is None:
+            raise HTTPException(status_code=404, detail="Unknown match")
+        stored = repository.latest_xt_values(conn)
+        xt = (XTModel.from_values(Grid(stored["grid_columns"], stored["grid_rows"]), stored["cell_values"])
+              if stored else None)
+        return build_match_report(
+            match, repository.match_events(conn, str(match_id)), repository.match_metrics(conn, str(match_id)),
+            repository.match_appearances(conn, str(match_id)), repository.match_spells(conn, str(match_id)), xt,
+        )
 
     @app.get("/api/scouting/presets")
     def scouting_presets() -> list[dict]:
