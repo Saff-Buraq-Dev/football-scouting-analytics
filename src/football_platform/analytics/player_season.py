@@ -84,11 +84,14 @@ def player_season_stats(
     count_keys += [f"{k}__sq" for k in count_keys] + ["aerials_total"]
     totals = (
         player_match.merge(season_of, on="match_id")
-        .groupby(SEASON_KEYS)[count_keys].sum()
+        .groupby(SEASON_KEYS)[count_keys].sum(min_count=1)  # all-NaN (unavailable) stays NaN
         .reset_index()
     )
     stats = playing.merge(totals, on=SEASON_KEYS, how="left")
-    stats[count_keys] = stats[count_keys].fillna(0)  # played, but no relevant events
+    # Played but no relevant events -> 0; metrics declared unavailable (e.g. no xT model) stay NaN.
+    unavailable = player_match.attrs.get("unavailable_metrics", frozenset())
+    available = [k for k in count_keys if k.removesuffix("__sq") not in unavailable]
+    stats[available] = stats[available].fillna(0)
     stats = stats.merge(primary_roles(position_spells, matches), on=SEASON_KEYS, how="left")
 
     derived: dict[str, pd.Series] = {}

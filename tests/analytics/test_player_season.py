@@ -99,3 +99,28 @@ def test_team_possession_context_is_weighted_by_the_players_minutes():
     sp = [("m1", "p1", "CB", 0, 5400), ("m2", "p1", "CB", 0, 1800)]
     row = season(rows, apps, sp).loc["p1"]
     assert row.team_possession_pct == pytest.approx((75 * 90 + 25 * 30) / 120)
+
+
+def test_xt_is_unavailable_without_a_model_and_valued_with_one():
+    import pandas as pd
+    from football_platform.analytics.xt import fit_xt
+
+    shot = ev("shot", shot_outcome="saved", start_x=95.0, start_y=34.0)
+    forward = ev("pass", start_x=40.0, start_y=34.0, end_x=95.0, end_y=34.0)
+    # Possession is sometimes lost from the same area, so it is worth less than the box.
+    lost = ev("pass", player="p2", outcome="fail", start_x=40.0, start_y=34.0, end_x=60.0, end_y=34.0)
+    apps = [("m1", "t1", "p1", True, 90.0)]
+    sp = [("m1", "p1", "CM", 0, 5400)]
+    without = season([shot, forward], apps, sp, xg=[(shot["id"], 0.3)]).loc["p1"]
+    assert math.isnan(without.xt_pass_p90)
+
+    events_frame = events(shot, forward, lost)
+    model = fit_xt(events_frame.assign(start_x=events_frame["start_x"].astype(float),
+                                       start_y=events_frame["start_y"].astype(float),
+                                       end_x=events_frame["end_x"].astype(float),
+                                       end_y=events_frame["end_y"].astype(float)),
+                   pd.Series({shot["id"]: 0.3}))
+    pm = player_match_stats(events_frame, metrics((shot["id"], 0.3)), spell_frame(), MATCHES, model)
+    row = player_season_stats(pm, appearances(apps), spells(sp), MATCHES, CAPS,
+                              team_match_possession(events_frame)).set_index("player_id").loc["p1"]
+    assert row.xt_pass > 0  # a forward pass into the box adds threat

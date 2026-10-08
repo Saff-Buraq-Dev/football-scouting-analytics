@@ -93,6 +93,9 @@ COUNT_METRICS: tuple[MetricSpec, ...] = (
     MetricSpec("progressive_carries", "Progressive carries", MetricKind.COUNT, capability="has_carries", regress=True),
     MetricSpec("passes_into_final_third", "Passes into final third", MetricKind.COUNT, regress=True),
     MetricSpec("passes_into_box", "Passes into penalty area", MetricKind.COUNT, regress=True),
+    # Expected Threat added by successful open-play actions (Phase 11.1). Needs an xT model.
+    MetricSpec("xt_pass", "xT from passes", MetricKind.COUNT, regress=True),
+    MetricSpec("xt_carry", "xT from carries", MetricKind.COUNT, capability="has_carries", regress=True),
     MetricSpec("tackles", "Tackles", MetricKind.COUNT, regress=True),
     MetricSpec("tackles_won", "Tackles won", MetricKind.COUNT),
     MetricSpec("interceptions", "Interceptions", MetricKind.COUNT, regress=True),

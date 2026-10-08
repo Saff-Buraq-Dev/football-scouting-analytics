@@ -16,6 +16,7 @@ import pandas as pd
 from football_platform.analytics.definitions import FINAL_THIRD_X, LONG_PASS_M
 from football_platform.analytics.geometry import in_penalty_area, is_progressive
 from football_platform.analytics.goalkeeping import GK_COLUMNS, goalkeeper_match_stats
+from football_platform.analytics.xt import XTModel, action_values
 from football_platform.canonical.enums import (
     DuelKind,
     EventType,
@@ -122,9 +123,12 @@ def player_match_stats(
     provider_metrics: pd.DataFrame,
     position_spells: pd.DataFrame,
     matches: pd.DataFrame,
+    xt_model: XTModel | None = None,
 ) -> pd.DataFrame:
     """One row per (match, player, team) with every count metric, its `__sq` term,
     goalkeeper shot-stopping counts and `aerials_total`.
+
+    Without an xT model, `xt_pass` and `xt_carry` are NaN (unavailable, not zero).
 
     position_spells needs match_id, team_id, player_id, period, start_s, end_s, role;
     matches needs id, home_team_id, away_team_id.
@@ -139,16 +143,27 @@ def player_match_stats(
     ev = in_play[in_play["player_id"].notna()]
 
     contributions = _event_indicators(ev, shot_xg(provider_metrics))
+    unavailable = set() if xt_model is not None else {"xt_pass", "xt_carry"}
+    if xt_model is not None:
+        xt = action_values(ev, xt_model)
+        contributions["xt_pass"] = xt.where(ev["type"] == EventType.PASS.value, 0.0)
+        contributions["xt_carry"] = xt.where(ev["type"] == EventType.CARRY.value, 0.0)
+    else:
+        contributions["xt_pass"] = np.nan
+        contributions["xt_carry"] = np.nan
     squared = (contributions**2).add_suffix("__sq")
     per_event = pd.concat([ev[KEYS], contributions, squared], axis=1)
-    stats = per_event.groupby(KEYS, sort=False).sum().reset_index()
+    stats = per_event.groupby(KEYS, sort=False).sum(min_count=1).reset_index()
 
     # Goalkeeper shot-stopping (Phase 4.1 §3): counts of opponent shots.
     gk = goalkeeper_match_stats(in_play, position_spells, matches)
     gk = gk.assign(**{f"{c}__sq": gk[c] for c in GK_COLUMNS})
     stats = stats.merge(gk, on=KEYS, how="outer")
-    value_columns = [c for c in stats.columns if c not in KEYS]
+    # Missing values become 0, except metrics declared unavailable (e.g. xT without a model).
+    unavailable_columns = unavailable | {f"{k}__sq" for k in unavailable}
+    value_columns = [c for c in stats.columns if c not in KEYS and c not in unavailable_columns]
     stats[value_columns] = stats[value_columns].fillna(0.0)
 
     stats["aerials_total"] = stats["aerials_won"] + stats["aerials_lost"]
+    stats.attrs["unavailable_metrics"] = frozenset(unavailable)
     return stats

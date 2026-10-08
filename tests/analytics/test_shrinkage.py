@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from football_platform.analytics.definitions import COUNT_METRICS
 from football_platform.analytics.shrinkage import add_regressed_estimates, group_prior
 
 SEASONS = pd.DataFrame({"id": ["s1"], "coverage_scope": ["complete"]})
@@ -25,9 +26,7 @@ def frame(rows):
                      "minutes": minutes, "np_goals": count, "np_goals__sq": count,
                      "np_goals_p90": count / minutes * 90})
     df = pd.DataFrame(data)
-    for key in ("np_shots", "npxg", "assists", "key_passes", "xa", "progressive_passes", "progressive_carries",
-                "passes_into_final_third", "passes_into_box", "tackles", "interceptions",
-                "ball_recoveries", "pressures", "aerials_won", "gk_claims", "gk_sweeper_actions"):
+    for key in (m.key for m in COUNT_METRICS if m.regress and m.key != "np_goals"):
         df[key] = np.nan
     return df
 
