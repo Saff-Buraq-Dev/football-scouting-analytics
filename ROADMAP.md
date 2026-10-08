@@ -244,11 +244,11 @@ Status: IN PROGRESS (started 2026-10-08)
 
 Order chosen by dependencies. Each feature goes through analysis, tests, validation, documentation and a commit before the next starts.
 
-1. Expected Threat (xT): value of every pass and carry; pitch grid shared with steps 2–3
-2. Pass and touch zone maps (player, zone aggregates)
-3. Pressing maps (team, where the ball is won back)
-4. Match pages (xG race, shot zones, team styles in the match)
-5. Passing networks (per team per match, on match pages)
+1. ✅ Expected Threat (xT): value of every pass and carry; pitch grid shared with steps 2–3 (D025)
+2. ✅ Pass and touch zone maps (player, zone aggregates) (D026)
+3. ✅ Pressing maps (team, where the ball is won back) (D027)
+4. ✅ Match pages (xG race, team comparison, standouts) (D028)
+5. ✅ Passing networks (per team per match, on match pages) (D028)
 6. Set-piece analysis (corner delivery zones and outcomes)
 7. Player archetypes (clustering within position groups, stability-validated)
 8. One-page scouting report (PDF)

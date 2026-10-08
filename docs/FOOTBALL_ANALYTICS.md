@@ -986,3 +986,36 @@ Both metrics must agree with PPDA (lower PPDA = more intense pressing):
 Highest defensive actions: Barcelona, Manchester City, Juventus, Napoli, PSG, Lyon, Tottenham. Lowest: Stoke City, Newcastle, Aston Villa, Troyes. Tottenham 2015/16 (Pochettino): defensive height at the 90th percentile and high ball wins at the 95th.
 
 **Limitation:** values span a narrow range (about 40–48 m), because averages compress differences. They are meaningful within a league, not as absolute "line heights".
+
+---
+
+# Phase 11.4–11.5 — Match pages and passing networks
+
+Status: implemented (decision D028).
+
+## Football questions
+
+What happened in the match, was the result deserved, how did each team play, and who stood out?
+
+## Content
+
+| Block | Definition |
+|---|---|
+| **xG race** | cumulative xG of each team (penalties included, shoot-out excluded) at the end of every **5-minute bin** of actual playing time (first-half stoppage time does not overlap the second half), with goals per bin, own goals included. Binned rather than shot by shot (D004) |
+| **Expected points** | exact Poisson-binomial computation from every shot's xG (Phase 8 method) |
+| **Team comparison** | xG, xPts, non-penalty shots, possession (pass share), passes, progressive passes, xT (stored model, Phase 11.1), PPDA, final-third ball wins |
+| **Passing networks** | starting XI **until the team's first substitution or dismissal**. Node = mean of the player's pass origins and receptions; node size = completed passes made and received; links = completed passes between two players, both directions, **shown from 3**. Networks with fewer than 100 passes are flagged "small sample" |
+| **Standouts** | the top 3 per category (npxG, xT, key passes, ball wins). Descriptive, no composite rating |
+
+## Validation (`.venv/bin/python scripts/validation/phase11_match_validation.py`)
+
+- Goals placed in the xG race reproduce the official score in **1,517 / 1,517** matches.
+- Networks cover a median of 60 minutes (10th percentile: 37) and 223 completed passes (10th percentile: 117). **6.9 %** of team-matches have fewer than 100 passes before the first change and are flagged.
+- Face validity, Manchester City 1–3 Leicester (6 Feb 2016): City had 66 % possession, 20 shots and 1.09 xG, with a dense network high in Leicester's half. Leicester had 12 shots and 1.64 xG, PPDA 19 vs 9.5 (a deep block), and network links from Schmeichel directly to the forwards (the direct style of that title season). Kanté had 19 ball wins.
+
+## Limitations
+
+- **Average positions mix phases:** in and out of possession are blended. They are tendencies, not a formation (stated on the page).
+- The network ignores the starting XI's changes in shape during the match.
+- xG bins hide the exact minute of each chance (by design, D004).
+- No game-state adjustment (a team leading may sit deeper).

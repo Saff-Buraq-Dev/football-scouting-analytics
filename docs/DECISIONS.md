@@ -53,6 +53,7 @@ Consequences:
 | D025 | Expected Threat (xT) as a progression metric | Accepted |
 | D026 | Player zone maps on a 6 × 5 channel grid; canonical left/right convention | Accepted |
 | D027 | Pressing metrics and maps from provider-independent defensive events | Accepted |
+| D028 | Match pages: binned xG race, stored xT model, networks until the first change | Accepted |
 
 Evidence for D002, D003, D008 and D009 is in [DATA_PROVIDERS.md](DATA_PROVIDERS.md). Technical detail for D001 and D004–D007 is in [ARCHITECTURE.md](ARCHITECTURE.md).
 
@@ -583,3 +584,25 @@ Reason: Validated against PPDA in all four leagues (r −0.41 to −0.86). Compa
 Alternatives considered: StatsBomb pressure locations (richer, but provider-specific); defensive line height from tracking data (not available).
 
 Consequences: The height metric compresses differences (40–48 m), so it is read through within-league percentiles.
+
+---
+
+### Decision D028 — Match pages and passing networks
+
+Date: 2026-10-08
+
+Status: Accepted
+
+Context: Match-level analysis is the most engaging entry point. It needs xT valuation per match and a licence-compliant way to show the flow of chances.
+
+Decision:
+- The fitted xT surface is **stored** (`xt_models`, migration 0007) by the player report, so the API values a match's actions without refitting.
+- The match report is computed on request from one match's events (about 0.15 s): xG race in 5-minute bins of actual playing time, exact xPts, team comparison, passing networks, standouts, lineups.
+- Passing networks use the starting XI until the first substitution or dismissal, links from 3 passes, and a small-sample flag under 100 passes.
+- Navigation: a Matches page per league, and a results list on each team profile.
+
+Reason: Binned xG keeps D004 while showing the match narrative. A stored model makes valuation fast and traceable. The network conventions are the standard public ones, made explicit.
+
+Alternatives considered: a shot-by-shot xG timeline (event-level data); pre-computing all match reports (unneeded at 0.15 s); networks over the whole match (they mix substitutes into one picture).
+
+Consequences: The score is reproduced exactly for every match (validated). Networks are flagged when based on fewer than 100 passes.
