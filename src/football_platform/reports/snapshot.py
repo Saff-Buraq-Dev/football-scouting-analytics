@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import math
 import uuid
+
+import numpy as np
 from typing import Any
 
 import pandas as pd
@@ -101,3 +103,41 @@ def store_team_snapshot(conn: psycopg.Connection, report: pd.DataFrame) -> int:
                     copy.write_row((row["team_id"], row["season_id"], metric.key,
                                     _clean(row[metric.key]), _clean(row[f"{metric.key}_pct"])))
     return len(report)
+
+
+def store_archetypes(conn: psycopg.Connection, report: pd.DataFrame) -> int:
+    """Fit archetypes per group on eligible players and assign every player of the group (Phase 11.7)."""
+    from football_platform.analytics.archetypes import ARCHETYPE_K, PROTOTYPES, fit_archetypes
+    from football_platform.analytics.definitions import PositionGroup
+    from football_platform.analytics.similarity import similarity_features
+
+    assigned = 0
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM player_archetypes")
+        cur.execute("DELETE FROM archetypes")
+        for group in ARCHETYPE_K:
+            features = similarity_features(PositionGroup(group))
+            columns = [f"{f}_p90_regressed" for f in features]
+            members = report[(report["position_group"] == group)].dropna(subset=columns)
+            population = members[members["eligible"]]
+            model = fit_archetypes(group, features, population[columns].to_numpy(float))
+            order, distances = model.assign(members[columns].to_numpy(float))
+            pop_mask = members["eligible"].to_numpy()
+            for index in range(len(model.centroids)):
+                in_type = np.where(pop_mask & (order[:, 0] == index))[0]
+                closest = in_type[np.argsort(distances[in_type, 0])][:PROTOTYPES]
+                description = model.describe(index)
+                cur.execute(
+                    """INSERT INTO archetypes (position_group, archetype_index, size, more_features, less_features,
+                       prototypes, prototype_seasons) VALUES (%s, %s, %s, %s, %s, %s::uuid[], %s::uuid[])""",
+                    (group, index, int(len(in_type)), description["more"], description["less"],
+                     [members.iloc[i]["player_id"] for i in closest], [members.iloc[i]["season_id"] for i in closest]),
+                )
+            with cur.copy("""COPY player_archetypes (player_id, season_id, position_group, archetype_index, distance,
+                             second_index, second_distance) FROM STDIN""") as copy:
+                for row, ranks, dists in zip(members.itertuples(), order, distances):
+                    second = len(ranks) > 1
+                    copy.write_row((row.player_id, row.season_id, group, int(ranks[0]), float(dists[0]),
+                                    int(ranks[1]) if second else None, float(dists[1]) if second else None))
+                    assigned += 1
+    return assigned

@@ -28,7 +28,7 @@ from football_platform.canonical.capabilities import ProviderCapabilities
 from football_platform.canonical.enums import CoverageScope, EventType
 from football_platform.database.connection import connect
 from football_platform.database.migrate import apply_migrations
-from football_platform.reports.snapshot import store_snapshot, store_xt_model
+from football_platform.reports.snapshot import store_archetypes, store_snapshot, store_xt_model
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 OUTPUT_DIR = PROJECT_ROOT / "data" / "analytics"
@@ -173,6 +173,7 @@ def main() -> None:
                 conn, report, args.min_minutes, sorted(report["population_seasons"].iloc[0].split(",")),
                 report["source_provider"].iloc[0],
             )
+            store_archetypes(conn, report)  # needs the player_seasons rows stored just above
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     files = report.assign(team_ids=report["team_ids"].map(list))
     files.to_parquet(OUTPUT_DIR / "player_seasons.parquet", index=False)
