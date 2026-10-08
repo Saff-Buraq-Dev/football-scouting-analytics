@@ -9,6 +9,7 @@ from typing import Any
 
 from football_platform.analytics.definitions import ALL_METRICS, MetricKind, PositionGroup
 from football_platform.analytics.profile_templates import POSSESSION_SENSITIVE, TEMPLATES, THEME_LABELS
+from football_platform.api.report import highlights
 
 METRICS = {m.key: m for m in ALL_METRICS}
 
@@ -100,6 +101,7 @@ def build_profile(player_season: dict[str, Any], metrics: dict[str, dict[str, An
             "min_minutes": min_minutes,
         },
         "themes": themes,
+        "highlights": highlights(themes),
         "all_metrics": [metric_view(k, metrics.get(k), eligible) for k in METRICS],
         "data_source": DATA_SOURCE,
     }
