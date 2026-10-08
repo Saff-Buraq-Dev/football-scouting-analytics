@@ -30,6 +30,8 @@ from football_platform.api.shots import player_shot_map, team_shot_map
 from football_platform.api.similarity import SimilarityUnavailableError, build_similarity
 from football_platform.api.team import LABELS as TEAM_LABELS
 from football_platform.api.team import build_team_profile, team_list_item
+from football_platform.api.zones import build_zone_maps, map_counts
+from football_platform.api.zones import frame as zone_frame
 from football_platform.database.connection import database_url
 
 # Vite dev server. A deployed frontend is served from the same origin.
@@ -140,6 +142,26 @@ def create_app(db_url: str | None = None) -> FastAPI:
         return player_shot_map(
             repository.player_shots(conn, str(player_id), str(season_id)), baseline,
             group or "none",  # position group key; the frontend words it
+        )
+
+    @lru_cache(maxsize=8)
+    def group_zone_counts(position_group: str) -> dict:
+        """Zone counts of a whole position group (baseline): computed once per group per process."""
+        with psycopg.connect(db_url or database_url(), autocommit=True) as conn:
+            return map_counts(zone_frame(repository.group_zone_events(conn, position_group)),
+                              zone_frame(repository.group_passes_received(conn, position_group)))
+
+    @app.get("/api/players/{player_id}/seasons/{season_id}/zones")
+    def player_zones(conn: Conn, player_id: UUID, season_id: UUID) -> dict:
+        row = repository.player_season(conn, str(player_id), str(season_id))
+        if row is None:
+            raise HTTPException(status_code=404, detail="No analytics for this player and season")
+        group = row.get("position_group")
+        baseline = group_zone_counts(group) if group else map_counts(zone_frame([]), zone_frame([]))
+        return build_zone_maps(
+            repository.player_zone_events(conn, str(player_id), str(season_id)),
+            repository.passes_received(conn, str(player_id), str(season_id)),
+            baseline, group,
         )
 
     @app.get("/api/teams/{team_id}/seasons/{season_id}/shots")

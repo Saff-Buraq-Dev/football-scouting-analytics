@@ -220,3 +220,33 @@ def team_shots(conn: psycopg.Connection, team_id: str, season_id: str) -> tuple[
 
 def league_shots(conn: psycopg.Connection, season_id: str) -> list[dict[str, Any]]:
     return _rows(conn, f"SELECT {SHOT_COLUMNS} {SHOT_JOIN} WHERE e.type = 'shot' AND mt.season_id = %s", (season_id,))
+
+
+ZONE_EVENT_COLUMNS = "e.period, e.type, e.outcome, e.set_piece, e.start_x, e.start_y, e.end_x, e.end_y"
+ZONE_TYPES = ["pass", "shot", "take_on", "ball_recovery", "interception", "clearance", "miscontrol", "dispossessed",
+              "carry"]
+
+
+def player_zone_events(conn: psycopg.Connection, player_id: str, season_id: str) -> list[dict[str, Any]]:
+    return _rows(conn, f"""SELECT {ZONE_EVENT_COLUMNS} FROM events e JOIN matches mt ON mt.id = e.match_id
+        WHERE e.player_id = %s AND mt.season_id = %s AND e.type = ANY(%s)""", (player_id, season_id, ZONE_TYPES))
+
+
+def passes_received(conn: psycopg.Connection, player_id: str, season_id: str) -> list[dict[str, Any]]:
+    return _rows(conn, f"""SELECT {ZONE_EVENT_COLUMNS} FROM events e JOIN matches mt ON mt.id = e.match_id
+        WHERE e.pass_recipient_id = %s AND mt.season_id = %s AND e.type = 'pass'""", (player_id, season_id))
+
+
+GROUP_SEASONS = """JOIN player_seasons ps ON ps.player_id = {player} AND ps.season_id = mt.season_id
+        JOIN analytics_runs r ON r.id = ps.analytics_run_id
+        WHERE ps.position_group = %s AND ps.eligible AND ps.season_id = ANY(r.population_seasons)"""
+
+
+def group_zone_events(conn: psycopg.Connection, position_group: str) -> list[dict[str, Any]]:
+    return _rows(conn, f"""SELECT {ZONE_EVENT_COLUMNS} FROM events e JOIN matches mt ON mt.id = e.match_id
+        {GROUP_SEASONS.format(player="e.player_id")} AND e.type = ANY(%s)""", (position_group, ZONE_TYPES))
+
+
+def group_passes_received(conn: psycopg.Connection, position_group: str) -> list[dict[str, Any]]:
+    return _rows(conn, f"""SELECT {ZONE_EVENT_COLUMNS} FROM events e JOIN matches mt ON mt.id = e.match_id
+        {GROUP_SEASONS.format(player="e.pass_recipient_id")} AND e.type = 'pass'""", (position_group,))
